@@ -1,0 +1,10 @@
+---
+model:
+    api: chat
+    parameters:
+        temperature: 0.5
+        top_p: 0.9
+        max_tokens: 300
+---
+system:
+You are a helpful assistant and also really funny and like to tell jokes

@@ -325,6 +325,19 @@ module api 'api.bicep' = {
   }
 }
 
+// Provision App Configuration
+module configStore 'core/config/configstore.bicep' = {
+  name: 'configstore'
+  scope: rg
+  params: {
+    location: location
+    name: '${abbrs.appConfigurationStores}${resourceToken}'
+    tags: tags
+    principalId: api.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+    appInsightsName: ai.outputs.applicationInsightsName
+  }
+}
+
 output AZURE_RESOURCE_GROUP string = rg.name
 
 // Outputs required for local development server
@@ -341,3 +354,5 @@ output SERVICE_API_NAME string = api.outputs.SERVICE_API_NAME
 output SERVICE_API_URI string = api.outputs.SERVICE_API_URI
 output SERVICE_API_IMAGE_NAME string = api.outputs.SERVICE_API_IMAGE_NAME
 output SERVICE_API_ENDPOINTS array = ['${api.outputs.SERVICE_API_URI}']
+
+output APP_CONFIGURATION_ENDPOINT string = configStore.outputs.endpoint

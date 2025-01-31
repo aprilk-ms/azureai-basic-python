@@ -6,6 +6,13 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from featuremanagement import FeatureManager
+from featuremanagement.azuremonitor import track_event
+
+import uuid
+import pathlib
+from azure.ai.inference.prompts import PromptTemplate
+
 from .shared import globals
 
 router = fastapi.APIRouter()
@@ -37,7 +44,19 @@ async def chat_stream_handler(
     async def response_stream():
         messages = [{"role": message.role, "content": message.content} for message in chat_request.messages]
         model_deployment_name = globals["chat_model"]
-        prompt_messages = globals["prompt"].create_messages()
+        feature_manager = globals["feature_manager"]
+        targeting_id = str(uuid.uuid4())
+
+        # fetch prompt variant, if any
+        prompt_variant = feature_manager.get_variant("prompty_file", targeting_id) # replace this with prompt_asset
+        if prompt_variant and prompt_variant.configuration:
+            # Replace this with prompt API
+            prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / prompt_variant.configuration)
+        else:
+            prompt = globals["prompt"]
+
+        prompt_messages = prompt.create_messages()
+
         chat_coroutine = await chat_client.complete(
             model=model_deployment_name, messages=prompt_messages + messages, stream=True
         )

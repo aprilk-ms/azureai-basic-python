@@ -4,4 +4,9 @@ gunicorn==22.0.0
 azure-identity==1.19.0
 aiohttp==3.11.1
 azure-ai-inference[prompts]
+azure-ai-inference[opentelemetry]
 azure-ai-projects
+azure-appconfiguration-provider==2.0.0b2
+FeatureManagement==2.0.0b2
+azure-monitor-opentelemetry
+azure-monitor-opentelemetry-exporter

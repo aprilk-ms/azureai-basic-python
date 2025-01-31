@@ -13,6 +13,14 @@ from fastapi.staticfiles import StaticFiles
 
 from .shared import globals
 
+from azure.ai.inference.tracing import AIInferenceInstrumentor 
+from azure.monitor.opentelemetry import configure_azure_monitor
+
+from azure.identity import DefaultAzureCredential
+from azure.appconfiguration.provider import load
+from featuremanagement import FeatureManager
+from featuremanagement.azuremonitor import publish_telemetry
+
 logger = logging.getLogger("azureaiapp")
 logger.setLevel(logging.INFO)
 
@@ -41,10 +49,28 @@ async def lifespan(app: fastapi.FastAPI):
     chat = await project.inference.get_chat_completions_client()
     prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / "prompt.prompty")
 
+    # Enable tracing
+    application_insights_connection_string = await project.telemetry.get_connection_string()
+    configure_azure_monitor(connection_string=application_insights_connection_string)
+    AIInferenceInstrumentor().instrument() 
+
+    # Inititalize the feature manager
+    app_config_conn_str = os.getenv("APP_CONFIGURATION_ENDPOINT") # this will become: project.experiments.get_connection_string()
+    app_config = load(
+        endpoint=app_config_conn_str,
+        credential=DefaultAzureCredential(),
+        feature_flag_enabled=True,
+        feature_flag_refresh_enabled=True,
+        refresh_interval=30,  # 30 seconds
+    )
+    feature_manager = FeatureManager(app_config, on_feature_evaluated=publish_telemetry)
+
     globals["project"] = project
     globals["chat"] = chat
     globals["prompt"] = prompt
     globals["chat_model"] = os.environ["AZURE_AI_CHAT_DEPLOYMENT_NAME"]
+    globals["feature_manager"] = feature_manager
+
     yield
 
     await project.close()

@@ -1,0 +1,59 @@
+{
+    "name": "online_eval_name",
+    "description": "online_eval_name description",
+    "isEnabled": true,
+    "provisioningState": "Succeeded",
+    "data": {
+        "type": "AppInsights",
+        "resourceId": "InstrumentationKey=224f19e4-ec6f-4b9b-8ddb-357ff3ca0394;IngestionEndpoint=https://eastus2-3.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus2.livediagnostics.monitor.azure.com/;ApplicationId=f029aec6-4f79-4301-b405-53ae1469a3a5",
+        "query": "let gen_ai_spans=(dependencies | where isnotnull(customDimensions[\"gen_ai.system\"]) | extend response_id = tostring(customDimensions[\"gen_ai.response.id\"]) | project id, operation_Id, operation_ParentId, timestamp, response_id); let gen_ai_events=(traces | where message in (\"gen_ai.choice\", \"gen_ai.user.message\", \"gen_ai.system.message\") or tostring(customDimensions[\"event.name\"]) in (\"gen_ai.choice\", \"gen_ai.user.message\", \"gen_ai.system.message\") | project id= operation_ParentId, operation_Id, operation_ParentId, user_input = iff(message == \"gen_ai.user.message\" or tostring(customDimensions[\"event.name\"]) == \"gen_ai.user.message\", parse_json(iff(message == \"gen_ai.user.message\", tostring(customDimensions[\"gen_ai.event.content\"]), message)).content, \"\"), system = iff(message == \"gen_ai.system.message\" or tostring(customDimensions[\"event.name\"]) == \"gen_ai.system.message\", parse_json(iff(message == \"gen_ai.system.message\", tostring(customDimensions[\"gen_ai.event.content\"]), message)).content, \"\"), llm_response = iff(message == \"gen_ai.choice\", parse_json(tostring(parse_json(tostring(customDimensions[\"gen_ai.event.content\"])).message)).content, iff(tostring(customDimensions[\"event.name\"]) == \"gen_ai.choice\", parse_json(parse_json(message).message).content, \"\")) | summarize operation_ParentId = any(operation_ParentId), Input = maxif(user_input, user_input != \"\"), System = maxif(system, system != \"\"), Output = maxif(llm_response, llm_response != \"\") by operation_Id, id); gen_ai_spans | join kind=inner (gen_ai_events) on id, operation_Id | project Input, System, Output, operation_Id, operation_ParentId, gen_ai_response_id = response_id",
+        "connectionString": "",
+        "serviceName": "",
+        "id": ""
+    },
+    "tags": {},
+    "properties": {
+        "AzureMSIClientId": "4610a06d-56a0-47ab-aeb6-cf95bc662052"
+    },
+    "evaluators": {
+        "relevance": {
+            "id": "azureml://registries/azureml-staging/models/Relevance-Evaluator/versions/4",
+            "initParams": {
+                "model_config": {
+                    "azure_deployment": "gpt-4o-mini",
+                    "api_version": "2024-08-01-preview",
+                    "type": "azure_openai",
+                    "azure_endpoint": "https://aoai-e6pnryr2q3qeg.openai.azure.com/"
+                }
+            },
+            "dataMapping": {
+                "query": "${data.Input}",
+                "response": "${data.Output}"
+            }
+        },
+        "coherence": {
+            "id": "azureml://registries/azureml/models/Coherence-Evaluator/versions/4",
+            "initParams": {
+                "model_config": {
+                    "azure_deployment": "gpt-4o-mini",
+                    "api_version": "2024-08-01-preview",
+                    "type": "azure_openai",
+                    "azure_endpoint": "https://aoai-e6pnryr2q3qeg.openai.azure.com/"
+                }
+            },
+            "dataMapping": {
+                "query": "${data.Input}",
+                "response": "${data.Output}"
+            }
+        }
+    },
+    "trigger": {
+        "type": "Recurrence",
+        "frequency": "Hour",
+        "interval": 1
+    },
+    "systemData": {
+        "createdBy": "",
+        "modifiedBy": ""
+    }
+}

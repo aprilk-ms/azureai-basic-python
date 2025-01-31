@@ -4,7 +4,7 @@ param configStoreName string
 @description('The principal ID of the service principal to assign the role to')
 param principalId string
 
-resource configStore 'Microsoft.AppConfiguration/configurationStores@2023-03-01' existing = {
+resource configStore 'Microsoft.AppConfiguration/configurationStores@2023-09-01-preview' existing = {
   name: configStoreName
 }
 
