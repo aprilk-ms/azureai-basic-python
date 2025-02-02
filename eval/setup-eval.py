@@ -92,7 +92,7 @@ name = SAMPLE_NAME
 description = f"{SAMPLE_NAME} description"
 # AzureMSIClientId is the clientID of the User-assigned managed identity created during set-up - see documentation for how to find it
 # https://ms.portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/83c77e9f-bbc1-41a6-8956-4e36e992336f/appId/4610a06d-56a0-47ab-aeb6-cf95bc662052
-properties = {"AzureMSIClientId": "4610a06d-56a0-47ab-aeb6-cf95bc662052"}
+properties = {"AzureMSIClientId": "c623a44d-a3b9-4485-95cc-db46967444e4", "Environment": "azureml://registries/azureml/environments/azureml-evaluations-built-in/versions/9"}
 
 # Configure the online evaluation schedule
 evaluation_schedule = EvaluationSchedule(

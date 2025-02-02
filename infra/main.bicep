@@ -203,6 +203,7 @@ module ai 'core/host/ai-environment.bicep' = if (empty(aiExistingProjectConnecti
     searchConnectionName: !useSearch
       ? ''
       : !empty(searchConnectionName) ? searchConnectionName : 'search-service-connection'
+    identityName: '${abbrs.managedIdentityUserAssignedIdentities}ai-project-${resourceToken}'
   }
 }
 
@@ -344,6 +345,7 @@ output AZURE_RESOURCE_GROUP string = rg.name
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_AIPROJECT_CONNECTION_STRING string = projectConnectionString
 output AZURE_AI_CHAT_DEPLOYMENT_NAME string = chatDeploymentName
+output AZURE_AIPROJECT_USER_IDENTITY_PRINCIPAL_ID string = ai.outputs.ProjectUserIdentityPrincipalId
 
 // Outputs required by azd for ACA
 output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName
@@ -356,3 +358,4 @@ output SERVICE_API_IMAGE_NAME string = api.outputs.SERVICE_API_IMAGE_NAME
 output SERVICE_API_ENDPOINTS array = ['${api.outputs.SERVICE_API_URI}']
 
 output APP_CONFIGURATION_ENDPOINT string = configStore.outputs.endpoint
+
