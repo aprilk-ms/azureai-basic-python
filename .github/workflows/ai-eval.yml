@@ -28,10 +28,10 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install dependencies
-        run: |
-            python -m pip install --upgrade pip
-            pip install -r requirements-dev.txt
+    #   - name: Install dependencies
+    #     run: |
+    #         python -m pip install --upgrade pip
+    #         pip install -r requirements-dev.txt
 
       - name: Install azd
         uses: azure/setup-azd@v2
@@ -73,7 +73,9 @@ jobs:
             "evaluators": {
               "coherence": "CoherenceEvaluator",
               "fluency": "FluencyEvaluator",
-              "relevance": "RelevanceEvaluator"
+              "relevance": "RelevanceEvaluator",
+              "relevance": "F1ScoreEvaluator",
+              "violence": "ViolenceEvaluator"
             },
             "ai_model_configuration": {
               "type": "azure_openai",
