@@ -31,9 +31,10 @@ def test_generate_ai_eval_input():
             for line in response.text.splitlines():
                 answer += json.loads(line).get("delta", {}).get("content", "") or ""
         
+            description = {"context": {"system-prompt": "dummy"}}
             input = {
                 "id": str(uuid.uuid4()),
-                "description": "dummy",
+                "description": json.dumps(description),
                 "query": data["query"],
                 "response": answer,
                 "ground_truth": data["ground-truth"],
