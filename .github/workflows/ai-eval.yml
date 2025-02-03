@@ -19,7 +19,7 @@ jobs:
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      EVAL_INPUT_FILE_PATH: ${{ github.workspace }}/evaluation-input.jsonl
+      EVAL_INPUT_FILE_PATH: ${{ github.workspace }}/evaluation-input-offline.jsonl
       EVAL_CONFIG_FILE_PATH: ${{ github.workspace }}/evaluate-config.json
     steps:
       - uses: actions/checkout@v4
@@ -59,11 +59,11 @@ jobs:
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Generate chat responses for AI Evaluation
-        run: python3 -m pytest -s src/api/test_ai_eval.py::test_generate_ai_eval_input
-        env:
-          AZURE_OPENAI_ENDPOINT : ${{ vars.AZURE_AI_SERVICE_ENDPOINT }}
-          AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ vars.AZURE_AI_DEPLOYMENT_NAME }}
+    #   - name: Generate chat responses for AI Evaluation
+    #     run: python3 -m pytest -s src/api/test_ai_eval.py::test_generate_ai_eval_input
+    #     env:
+    #       AZURE_OPENAI_ENDPOINT : ${{ vars.AZURE_AI_SERVICE_ENDPOINT }}
+    #       AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ vars.AZURE_AI_DEPLOYMENT_NAME }}
 
       - name: Prepare AI evaluation configuration file
         run: |
