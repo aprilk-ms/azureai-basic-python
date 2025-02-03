@@ -41,7 +41,7 @@ def test_generate_ai_eval_input():
             }
             evalInput += json.dumps(input) + "\n"
 
-    output_path = "evaluation-input-offline.jsonl"
+    output_path = "evaluation-input.jsonl"
     with open(output_path, "w") as file:
         file.write(evalInput)
 

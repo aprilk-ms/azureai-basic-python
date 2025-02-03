@@ -425,6 +425,7 @@ output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_AIPROJECT_CONNECTION_STRING string = projectConnectionString
 output AZURE_AI_CHAT_DEPLOYMENT_NAME string = chatDeploymentName
 output AZURE_AIPROJECT_USER_IDENTITY_PRINCIPAL_ID string = ai.outputs.ProjectUserIdentityPrincipalId
+output AZURE_AI_SERVICE_ENDPOINT string = ai.outputs.aiServiceEndpoint
 
 // Outputs required by azd for ACA
 output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName

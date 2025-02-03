@@ -1,0 +1,92 @@
+name: AI Evaluation
+on:
+  workflow_dispatch:
+  push:
+
+# Set up permissions for deploying with secretless Azure federated credentials
+# https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  evaluate:
+    name: Test Variants with AI Evaluators
+    runs-on: ubuntu-latest
+    if: ${{ vars.AZURE_AI_SERVICE_ENDPOINT != '' }}
+    env:
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      EVAL_INPUT_FILE_PATH: ${{ github.workspace }}/evaluation-input.jsonl
+      EVAL_CONFIG_FILE_PATH: ${{ github.workspace }}/evaluate-config.json
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements-dev.txt
+
+      - name: Install azd
+        uses: azure/setup-azd@v2
+
+      - name: Log in with Azure (Federated Credentials)
+        if: ${{ env.AZURE_CLIENT_ID != '' }}
+        run: |
+          azd auth login `
+            --client-id "$Env:AZURE_CLIENT_ID" `
+            --federated-credential-provider "github" `
+            --tenant-id "$Env:AZURE_TENANT_ID"
+        shell: pwsh
+
+      - name: Log in with Azure (Client Credentials)
+        if: ${{ env.AZURE_CREDENTIALS != '' }}
+        run: |
+          $info = $Env:AZURE_CREDENTIALS | ConvertFrom-Json -AsHashtable;
+          Write-Host "::add-mask::$($info.clientSecret)"
+
+          azd auth login `
+            --client-id "$($info.clientId)" `
+            --client-secret "$($info.clientSecret)" `
+            --tenant-id "$($info.tenantId)"
+        shell: pwsh
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Generate chat responses for AI Evaluation
+        run: python3 -m pytest -s src/api/test_ai_eval.py::test_generate_ai_eval_input
+        env:
+          AZURE_OPENAI_ENDPOINT : ${{ vars.AZURE_AI_SERVICE_ENDPOINT }}
+          AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ vars.AZURE_AI_DEPLOYMENT_NAME }}
+
+      - name: Prepare AI evaluation configuration file
+        run: |
+          cat > ${{ env.EVAL_CONFIG_FILE_PATH }}<<EOF
+          {
+            "data": "${{ env.EVAL_INPUT_FILE_PATH }}",
+            "evaluators": {
+              "coherence": "CoherenceEvaluator",
+              "fluency": "FluencyEvaluator"
+            },
+            "ai_model_configuration": {
+              "type": "azure_openai",
+              "azure_endpoint": "${{ vars.AZURE_AI_SERVICE_ENDPOINT }}",
+              "azure_deployment": "${{ vars.AZURE_AI_DEPLOYMENT_NAME }}",
+              "api_version": "2024-08-01-preview"
+            }
+          }
+          EOF
+
+      - name: Run AI Evaluation
+        id: run-ai-evaluation
+        uses: microsoft/genai-evals@main
+        with:          
+          evaluate-configuration: ${{ env.EVAL_CONFIG_FILE_PATH }}
+          show-summary: true
+          show-raw-output: true
