@@ -6,6 +6,7 @@ aiohttp==3.11.1
 azure-ai-inference[prompts]
 azure-ai-inference[opentelemetry]
 azure-ai-projects
+azure-ai-evaluation
 azure-appconfiguration-provider==2.0.0b2
 FeatureManagement==2.0.0b2
 azure-monitor-opentelemetry
