@@ -73,9 +73,7 @@ jobs:
             "evaluators": {
               "coherence": "CoherenceEvaluator",
               "fluency": "FluencyEvaluator",
-              "relevance": "RelevanceEvaluator",
-              "f1scorecard": "F1ScoreEvaluator",
-              "violence": "ViolenceEvaluator",
+              "relevance": "RelevanceEvaluator"
             },
             "ai_model_configuration": {
               "type": "azure_openai",
