@@ -72,7 +72,10 @@ jobs:
             "data": "${{ env.EVAL_INPUT_FILE_PATH }}",
             "evaluators": {
               "coherence": "CoherenceEvaluator",
-              "fluency": "FluencyEvaluator"
+              "fluency": "FluencyEvaluator",
+              "relevance": "RelevanceEvaluator",
+              "f1scorecard": "F1ScoreEvaluator",
+              "violence": "ViolenceEvaluator",
             },
             "ai_model_configuration": {
               "type": "azure_openai",
