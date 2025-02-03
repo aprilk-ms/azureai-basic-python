@@ -10,3 +10,4 @@ azure-appconfiguration-provider==2.0.0b2
 FeatureManagement==2.0.0b2
 azure-monitor-opentelemetry
 azure-monitor-opentelemetry-exporter
+azure-monitor-events-extension

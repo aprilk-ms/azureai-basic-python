@@ -6,7 +6,6 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from featuremanagement import FeatureManager
 from featuremanagement.azuremonitor import track_event
 
 import uuid
@@ -14,7 +13,12 @@ import pathlib
 from azure.ai.inference.prompts import PromptTemplate
 
 from .shared import globals
+from azure.core.settings import settings 
 
+from opentelemetry.baggage import get_baggage
+from azure.ai.inference.aio import ChatCompletionsClient
+
+settings.tracing_implementation = "opentelemetry" 
 router = fastapi.APIRouter()
 templates = Jinja2Templates(directory="api/templates")
 
@@ -27,15 +31,17 @@ class Message(pydantic.BaseModel):
 class ChatRequest(pydantic.BaseModel):
     messages: list[Message]
 
+@router.get("/test/hello")
+async def test():
+    return "helloworld"
 
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
-
 @router.post("/chat/stream")
 async def chat_stream_handler(
-    chat_request: ChatRequest,
+    chat_request: ChatRequest
 ) -> fastapi.responses.StreamingResponse:
     chat_client = globals["chat"]
     if chat_client is None:
@@ -45,7 +51,8 @@ async def chat_stream_handler(
         messages = [{"role": message.role, "content": message.content} for message in chat_request.messages]
         model_deployment_name = globals["chat_model"]
         feature_manager = globals["feature_manager"]
-        targeting_id = str(uuid.uuid4())
+
+        targeting_id = get_baggage("Microsoft.TargetingId") or str(uuid.uuid4())
 
         # fetch prompt variant, if any
         prompt_variant = feature_manager.get_variant("prompty_file", targeting_id) # replace this with prompt_asset

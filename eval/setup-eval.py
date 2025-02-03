@@ -103,5 +103,5 @@ evaluation_schedule = EvaluationSchedule(
     properties=properties)
 
 # Create the online evaluation schedule 
-created_evaluation_schedule = project_client.evaluations.create_or_replace_schedule(name, evaluation_schedule)
-print(f"Successfully submitted the online evaluation schedule creation request - {created_evaluation_schedule.name}, currently in {created_evaluation_schedule.provisioning_state} state.")
+#created_evaluation_schedule = project_client.evaluations.create_or_replace_schedule(name, evaluation_schedule)
+#print(f"Successfully submitted the online evaluation schedule creation request - {created_evaluation_schedule.name}, currently in {created_evaluation_schedule.provisioning_state} state.")

@@ -339,6 +339,85 @@ module configStore 'core/config/configstore.bicep' = {
   }
 }
 
+module experimentWorkspace 'core/config/experimentworkspace.bicep' = {
+  name: 'expWorkspace'
+  scope: rg
+  params: {
+    name: 'exp${substring(resourceToken, 0, 10)}'
+    location: 'eastus2'
+    tags: tags
+    userPrincipalId: principalId
+    createRoleForUser: true
+    pipelineServicePrincipalId: principalId
+    logAnalyticsWorkspaceName: ai.outputs.logAnalyticsWorkspaceName
+    storageAccountName: ai.outputs.storageAccountName
+    identityName: '${abbrs.managedIdentityUserAssignedIdentities}exp-${resourceToken}'
+  }
+}
+
+// Allow experiment workspace read access to storage
+module logAnalyticsExpAccess 'core/security/role.bicep' = {
+  scope: rg
+  name: 'storage-account-exp-role'
+  params: {
+    principalId: experimentWorkspace.outputs.expWorkspaceIdentityPrincipalId
+    roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1' // Storage Blob Data Reader
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Allow experiment workspace read access to log analytics workspace
+module storageAccountExpAccess 'core/security/role.bicep' = {
+  scope: rg
+  name: 'log-analytics-exp-role'
+  params: {
+    principalId: experimentWorkspace.outputs.expWorkspaceIdentityPrincipalId
+    roleDefinitionId: '73c42c96-874c-492b-b04d-ab87d138a893' // Log Analytics Reader
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Allow pipeline access to Log Analytics workspace
+// module logAnalyticsRole 'core/security/role.bicep' = if (!createRoleForUser) {
+//   scope: resourceGroup
+//   name: 'log-analytics-role-pipeline'
+//   params: {
+//     principalId: principalId
+//     roleDefinitionId: '92aaf0da-9dab-42b6-94a3-d43ce8d16293' // Log Analytics Contributor
+//     principalType: 'ServicePrincipal'
+//   }
+// }
+
+module dataExportRule 'core/monitor/dataexports.bicep' = {
+  name: 'loganalytics-dataexportrule'
+  scope: rg
+  params: {
+    name: 'dataexportrule'
+    logAnalyticsWorkspaceName: ai.outputs.logAnalyticsWorkspaceName
+    storageAccountName: ai.outputs.storageAccountName
+    tables: [
+      'AppEvents'
+      'AppEvents_CL'
+    ]
+  }
+}
+
+// Provision summary rules aggregating data for experiment workspace
+var ruleDefinitions = loadYamlContent('./la-summary-rules.yaml')
+module summaryRules 'core/monitor/summaryrule.bicep' =  [ for (rule, i) in ruleDefinitions.summaryRules:  {
+  name: 'loganalytics-summaryrule-${i}'
+  scope: rg
+  params: {
+    location: location
+    logAnalyticsWorkspaceName: ai.outputs.logAnalyticsWorkspaceName
+    summaryRuleName: rule.name
+    description: rule.description
+    query: rule.query
+    binSize: rule.binSize // see choices at https://aka.ms/LogsSummaryRule#create-or-update-a-summary-rule
+    destinationTable: rule.destinationTable
+  }
+} ]
+
 output AZURE_RESOURCE_GROUP string = rg.name
 
 // Outputs required for local development server
@@ -358,4 +437,6 @@ output SERVICE_API_IMAGE_NAME string = api.outputs.SERVICE_API_IMAGE_NAME
 output SERVICE_API_ENDPOINTS array = ['${api.outputs.SERVICE_API_URI}']
 
 output APP_CONFIGURATION_ENDPOINT string = configStore.outputs.endpoint
+output EXPERIMENT_WORKSPACE_ID string = experimentWorkspace.outputs.expWorkspaceId
+output APPLICATIONINSIGHTS_CONNECTION_STRING string = ai.outputs.applicationInsightsConnectionString
 
