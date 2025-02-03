@@ -38,7 +38,7 @@ def test_generate_ai_eval_input():
                     "messages": [
                         {"role": "user", "content": query},
                     ],
-                    "prompt_override": prompty_file
+                    "system-prompt": prompty_file
                 })
 
                 answer = ""
