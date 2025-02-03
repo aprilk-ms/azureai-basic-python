@@ -63,7 +63,7 @@ jobs:
     #     run: python3 -m pytest -s src/api/test_ai_eval.py::test_generate_ai_eval_input
     #     env:
     #       AZURE_OPENAI_ENDPOINT : ${{ vars.AZURE_AI_SERVICE_ENDPOINT }}
-    #       AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ vars.AZURE_AI_DEPLOYMENT_NAME }}
+    #       AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ vars.AZURE_AI_CHAT_DEPLOYMENT_NAME }}
 
       - name: Prepare AI evaluation configuration file
         run: |
@@ -77,7 +77,7 @@ jobs:
             "ai_model_configuration": {
               "type": "azure_openai",
               "azure_endpoint": "${{ vars.AZURE_AI_SERVICE_ENDPOINT }}",
-              "azure_deployment": "${{ vars.AZURE_AI_DEPLOYMENT_NAME }}",
+              "azure_deployment": "${{ vars.AZURE_AI_CHAT_DEPLOYMENT_NAME }}",
               "api_version": "2024-08-01-preview"
             }
           }
