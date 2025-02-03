@@ -30,6 +30,7 @@ class Message(pydantic.BaseModel):
 
 class ChatRequest(pydantic.BaseModel):
     messages: list[Message]
+    prompt_override: str = None
 
 @router.get("/test/hello")
 async def test():
@@ -50,17 +51,18 @@ async def chat_stream_handler(
     async def response_stream():
         messages = [{"role": message.role, "content": message.content} for message in chat_request.messages]
         model_deployment_name = globals["chat_model"]
-        feature_manager = globals["feature_manager"]
-
+        feature_manager = globals["feature_manager"] 
         targeting_id = get_baggage("Microsoft.TargetingId") or str(uuid.uuid4())
-
-        # fetch prompt variant, if any
-        prompt_variant = feature_manager.get_variant("prompty_file", targeting_id) # replace this with prompt_asset
-        if prompt_variant and prompt_variant.configuration:
-            # Replace this with prompt API
-            prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / prompt_variant.configuration)
-        else:
-            prompt = globals["prompt"]
+        
+        # figure out which prompty template to use (replace file to API)
+        if chat_request.prompt_override:
+            prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / chat_request.prompt_override)
+        else:                       
+            prompt_variant = feature_manager.get_variant("prompty_file", targeting_id) # replace this with prompt_asset
+            if prompt_variant and prompt_variant.configuration:
+                prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / prompt_variant.configuration)
+            else:
+                prompt = globals["prompt"]
 
         prompt_messages = prompt.create_messages()
 

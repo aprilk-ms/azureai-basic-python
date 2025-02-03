@@ -15,32 +15,46 @@ def get_eval_data_set():
         dataSet = json.load(file)
     return dataSet
 
+def get_prompt_template_variants():
+    current_dir = os.path.dirname(__file__)
+    file_path = os.path.join(current_dir, "../../.config/feature-flags.json")
+    with open(file_path) as file:
+        feature_flags = json.load(file)
+    for feature_flag in feature_flags["feature_management"]["feature_flags"]:
+        if feature_flag["id"] == "prompty_file":
+            return feature_flag["variants"]
+
+
 def test_generate_ai_eval_input():
     app = create_app()
     with TestClient(app) as client:
         evalInput = ""
-        for data in get_eval_data_set():
-            query = data["query"]
-            response = client.post("/chat/stream", json={
-                "messages": [
-                    {"role": "user", "content": query},
-                ]
-            })
+        for variant in get_prompt_template_variants():
+            variant_name = variant["name"]
+            prompty_file = variant["configuration_value"]
+            for data in get_eval_data_set():
+                query = data["query"]
+                response = client.post("/chat/stream", json={
+                    "messages": [
+                        {"role": "user", "content": query},
+                    ],
+                    "prompt_override": prompty_file
+                })
 
-            answer = ""
-            for line in response.text.splitlines():
-                answer += json.loads(line).get("delta", {}).get("content", "") or ""
-        
-            description = {"context": {"system-prompt": "dummy"}}
-            input = {
-                "id": str(uuid.uuid4()),
-                "description": json.dumps(description),
-                "query": data["query"],
-                "response": answer,
-                "ground_truth": data["ground-truth"],
-                "context": "dummy"
-            }
-            evalInput += json.dumps(input) + "\n"
+                answer = ""
+                for line in response.text.splitlines():
+                    answer += json.loads(line).get("delta", {}).get("content", "") or ""
+            
+                description = {"context": {"prompt-template": prompty_file}}
+                input = {
+                    "id": str(uuid.uuid4()),
+                    "description": json.dumps(description),
+                    "query": data["query"],
+                    "response": answer,
+                    "ground_truth": data["ground-truth"],
+                    "context": "prompty template variant: " + variant_name
+                }
+                evalInput += json.dumps(input) + "\n"
 
     output_path = "evaluation-input.jsonl"
     with open(output_path, "w") as file:

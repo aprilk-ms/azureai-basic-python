@@ -55,7 +55,7 @@ async def lifespan(app: fastapi.FastAPI):
     )
 
     chat = await project.inference.get_chat_completions_client()
-    prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / "prompt.prompty")
+    prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / "prompt.v1.prompty")
 
     # Enable tracing
     application_insights_connection_string = await project.telemetry.get_connection_string()
@@ -112,8 +112,7 @@ def create_app():
     app = fastapi.FastAPI(lifespan=lifespan)
 
     static_dir = os.path.join(os.path.dirname(__file__), "static")
-    if os.path.isdir(static_dir):
-        app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
     from . import routes  # noqa
 
