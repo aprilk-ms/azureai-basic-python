@@ -74,7 +74,7 @@ jobs:
               "coherence": "CoherenceEvaluator",
               "fluency": "FluencyEvaluator",
               "relevance": "RelevanceEvaluator",
-              "relevance": "F1ScoreEvaluator",
+              "f1score": "F1ScoreEvaluator",
               "violence": "ViolenceEvaluator"
             },
             "ai_model_configuration": {
