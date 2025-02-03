@@ -38,14 +38,14 @@ def test_generate_ai_eval_input():
                     "messages": [
                         {"role": "user", "content": query},
                     ],
-                    "system-prompt": prompty_file
+                    "prompt_override": prompty_file
                 })
 
                 answer = ""
                 for line in response.text.splitlines():
                     answer += json.loads(line).get("delta", {}).get("content", "") or ""
             
-                description = {"context": {"prompt-template": prompty_file}}
+                description = {"context": {"system-prompt": prompty_file}}
                 input = {
                     "id": str(uuid.uuid4()),
                     "description": json.dumps(description),
