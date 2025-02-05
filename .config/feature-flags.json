@@ -34,7 +34,7 @@
           "telemetry": {
             "enabled": true
           }
-        },
+        },        
         {
           "id": "prompty_file",
           "enabled": true,
@@ -70,4 +70,4 @@
         }
       ]
     }    
-  }
+}
