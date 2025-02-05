@@ -3,14 +3,14 @@ from fastapi.testclient import TestClient
 import json
 import os
 import uuid
-
+import pytest_asyncio
 from azure.ai.projects.aio import AIProjectClient
 from azure.ai.evaluation import evaluate, FluencyEvaluator
 from azure.identity import DefaultAzureCredential
 
 def get_eval_data_set():
     current_dir = os.path.dirname(__file__)
-    file_path = os.path.join(current_dir, "data/eval-data-set.jsonl")
+    file_path = os.path.join(current_dir, "data/eval-data-set-large.jsonl")
     with open(file_path) as file:
         dataSet = json.load(file)
     return dataSet
@@ -24,6 +24,36 @@ def get_prompt_template_variants():
         if feature_flag["id"] == "prompty_file":
             return feature_flag["variants"]
 
+
+def test_simulate_traffic():
+    app = create_app()
+    with TestClient(app) as client:
+        for i in range(20):
+            for data in get_eval_data_set():
+                query = data["query"]
+                response = client.post("/chat", json={
+                    "messages": [
+                        {"role": "user", "content": query},
+                    ]
+                })            
+                answer = ""
+                for line in response.text.splitlines():
+                    answer += json.loads(line).get("delta", {}).get("content", "") or ""
+                print(answer)
+
+
+def test_simulate_traffic_nostream():
+    app = create_app()
+    with TestClient(app) as client:
+        for i in range(20):
+            for data in get_eval_data_set():
+                query = data["query"]
+                response = client.post("/chat", json={
+                    "messages": [
+                        {"role": "user", "content": query},
+                    ]
+                })            
+                print(response.text)
 
 def test_generate_ai_eval_input():
     app = create_app()

@@ -86,3 +86,40 @@ async def chat_stream_handler(
                 )
 
     return fastapi.responses.StreamingResponse(response_stream())
+
+
+@router.post("/chat")
+async def chat_nostream_handler(
+    chat_request: ChatRequest
+):
+    chat_client = globals["chat"]
+    if chat_client is None:
+        raise Exception("Chat client not initialized")
+   
+    messages = [{"role": message.role, "content": message.content} for message in chat_request.messages]
+    model_deployment_name = globals["chat_model"]
+    feature_manager = globals["feature_manager"] 
+    targeting_id = get_baggage("Microsoft.TargetingId") or str(uuid.uuid4())
+    
+    # figure out which prompty template to use (replace file to API)
+    if chat_request.prompt_override:
+        prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / chat_request.prompt_override)
+    else:                       
+        prompt_variant = feature_manager.get_variant("prompty_file", targeting_id) # replace this with prompt_asset
+        if prompt_variant and prompt_variant.configuration:
+            prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / prompt_variant.configuration)
+        else:
+            prompt = globals["prompt"]
+
+    prompt_messages = prompt.create_messages()
+
+    try:
+        response = await chat_client.complete(
+            model=model_deployment_name, messages=prompt_messages + messages, stream=False
+        )
+    except Exception as e:
+        error = {"Error": str(e)}
+        track_event("ErrorLLM", targeting_id, error)
+        
+    answer = response.choices[0].message.content
+    return answer

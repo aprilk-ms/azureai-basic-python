@@ -1,0 +1,94 @@
+[
+    {
+        "query": "Tell me about Tokyo?",
+        "ground-truth": "Tokyo is the capital of Japan and the largest city in the country. It is located on the eastern coast of Honshu, the largest of Japan's four main islands. Tokyo is the political, economic, and cultural center of Japan and is one of the world's most populous cities. It is also one of the world's most important financial centers and is home to the Tokyo Stock Exchange."
+    },
+    {
+        "query": "Where is Italy?",
+        "ground-truth": "Italy is a country in southern Europe, located on the Italian Peninsula and the two largest islands in the Mediterranean Sea, Sicily and Sardinia. It is a unitary parliamentary republic with its capital in Rome, the largest city in Italy. Other major cities include Milan, Naples, Turin, and Palermo."
+    },
+    {
+        "query": "Where is Papua New Guinea?",
+        "ground-truth": "Papua New Guinea is an island country that lies in the south-western Pacific. It includes the eastern half of New Guinea and many small offshore islands. Its neighbours include Indonesia to the west, Australia to the south and Solomon Islands to the south-east."
+    },
+    {
+        "query": "What is the capital of France?",
+        "ground-truth": "The capital of France is Paris. It is known for its art, fashion, gastronomy, and culture. The city is also home to landmarks such as the Eiffel Tower, Notre-Dame Cathedral, and the Louvre Museum."
+    },
+    {
+        "query": "Where is the Great Wall of China?",
+        "ground-truth": "The Great Wall of China is located in northern China. It stretches from the Bohai Sea in the east to the Gobi Desert in the west, covering approximately 13,170 miles. It was built to protect against invasions and raids."
+    },
+    {
+        "query": "Tell me about the Grand Canyon?",
+        "ground-truth": "The Grand Canyon is a steep-sided canyon carved by the Colorado River in Arizona, United States. It is 277 miles long, up to 18 miles wide, and over a mile deep. It is a popular tourist destination known for its stunning views."
+    },
+    {
+        "query": "Where is the Eiffel Tower?",
+        "ground-truth": "The Eiffel Tower is located in Paris, France. It is a wrought-iron lattice tower on the Champ de Mars, named after the engineer Gustave Eiffel, whose company designed and built the tower."
+    },
+    {
+        "query": "What is the capital of Australia?",
+        "ground-truth": "The capital of Australia is Canberra. It is located in the Australian Capital Territory and is the political center of the country, housing the Parliament House and the High Court of Australia."
+    },
+    {
+        "query": "Where is the Colosseum?",
+        "ground-truth": "The Colosseum is located in Rome, Italy. It is an ancient amphitheater that was used for gladiatorial contests and public spectacles. It is one of the most iconic symbols of ancient Rome."
+    },
+    {
+        "query": "Tell me about the Taj Mahal?",
+        "ground-truth": "The Taj Mahal is a white marble mausoleum located in Agra, India. It was commissioned by Mughal Emperor Shah Jahan in memory of his wife Mumtaz Mahal. It is a UNESCO World Heritage Site and one of the New Seven Wonders of the World."
+    },
+    {
+        "query": "Where is Mount Everest?",
+        "ground-truth": "Mount Everest is located in the Himalayas on the border between Nepal and the Tibet Autonomous Region of China. It is the highest mountain in the world, with a peak at 8,848 meters (29,029 feet) above sea level."
+    },
+    {
+        "query": "What is the capital of Canada?",
+        "ground-truth": "The capital of Canada is Ottawa. It is located in the province of Ontario and is the fourth largest city in Canada. Ottawa is known for its historic landmarks, including Parliament Hill and the Rideau Canal."
+    },
+    {
+        "query": "Where is the Statue of Liberty?",
+        "ground-truth": "The Statue of Liberty is located on Liberty Island in New York Harbor, United States. It was a gift from France to the United States and is a symbol of freedom and democracy."
+    },
+    {
+        "query": "Tell me about the Amazon Rainforest?",
+        "ground-truth": "The Amazon Rainforest is a vast tropical rainforest in South America, covering parts of Brazil, Peru, Colombia, and other countries. It is the largest rainforest in the world and is home to a diverse range of flora and fauna."
+    },
+    {
+        "query": "Where is the Leaning Tower of Pisa?",
+        "ground-truth": "The Leaning Tower of Pisa is located in Pisa, Italy. It is a freestanding bell tower known for its unintended tilt. The tower is part of the cathedral of the Italian city of Pisa."
+    },
+    {
+        "query": "What is the capital of Egypt?",
+        "ground-truth": "The capital of Egypt is Cairo. It is the largest city in the Arab world and is known for its rich history, including the nearby Giza pyramid complex and the ancient city of Memphis."
+    },
+    {
+        "query": "Where is Machu Picchu?",
+        "ground-truth": "Machu Picchu is located in the Andes Mountains in Peru. It is an ancient Incan city set high in the mountains and is known for its archaeological significance and stunning views."
+    },
+    {
+        "query": "Tell me about the Sahara Desert?",
+        "ground-truth": "The Sahara Desert is the largest hot desert in the world, covering much of North Africa. It spans several countries, including Algeria, Chad, Egypt, Libya, Mali, Mauritania, Morocco, Niger, Western Sahara, Sudan, and Tunisia."
+    },
+    {
+        "query": "Where is the Sydney Opera House?",
+        "ground-truth": "The Sydney Opera House is located in Sydney, Australia. It is a multi-venue performing arts center known for its distinctive sail-like design and is one of the most famous landmarks in Australia."
+    },
+    {
+        "query": "What is the capital of Brazil?",
+        "ground-truth": "The capital of Brazil is Brasília. It is located in the central-western region of the country and was founded in 1960 to promote the development of the interior of Brazil."
+    },
+    {
+        "query": "Where is the Acropolis?",
+        "ground-truth": "The Acropolis is located in Athens, Greece. It is an ancient citadel that contains the remains of several historically significant buildings, including the Parthenon."
+    },
+    {
+        "query": "Tell me about the Galápagos Islands?",
+        "ground-truth": "The Galápagos Islands are an archipelago of volcanic islands located in the Pacific Ocean, about 1,000 kilometers (620 miles) off the coast of Ecuador. They are known for their unique wildlife and were studied by Charles Darwin during his voyage on the HMS Beagle."
+    },
+    {
+        "query": "Where is the Kremlin?",
+        "ground-truth": "The Kremlin is located in Moscow, Russia. It is a fortified complex that includes the official residence of the President of Russia, as well as several cathedrals and government buildings."
+    }
+]
