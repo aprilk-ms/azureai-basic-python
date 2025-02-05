@@ -1,19 +1,55 @@
-name: Deploy Feature Flags
+name: Deploy Experiments
 on:
-  workflow_dispatch:
-  push:
+    workflow_dispatch:
+    push:
+
+# GitHub Actions workflow to deploy to Azure using azd
+# To configure required secrets for connecting to Azure, simply run `azd pipeline config`
+
+# Set up permissions for deploying with secretless Azure federated credentials
+# https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
+permissions:
+    id-token: write
+    contents: read
+
+env:
+    APP_CONFIGURATION_FILE: src/quartapp/data/feature-flags.json
 
 jobs:
-  validate-feature-flags:
-    runs-on: ubuntu-latest
-    env:
-      APP_CONFIGURATION_FILE: .config/feature-flags.json
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    validate-feature-flags:
+        name: Validate Feature Flags
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
 
-      - name: Validate App Config feature flags
-        uses: azure/app-configuration-deploy-feature-flags@v1-beta
-        with:
-          path: ${{ env.APP_CONFIGURATION_FILE }}
-          operation: validate
+            - name: Validate App Config feature flags
+              uses: azure/app-configuration-deploy-feature-flags@v1-beta
+              with:
+                path: ${{ env.APP_CONFIGURATION_FILE }}
+                operation: validate
+          
+          
+    deploy-experiments:
+        name: Deploy Feature Flags
+        runs-on: ubuntu-latest
+        needs: validate-feature-flags       
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+
+          - name: Azure login using Federated Credentials
+            uses: azure/login@v2
+            with:
+                client-id: ${{ vars.AZURE_CLIENT_ID }}
+                tenant-id: ${{ vars.AZURE_TENANT_ID }}
+                subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+                enable-AzPSSession: true
+
+          - name: Deploy App Config feature flags
+            uses: azure/app-configuration-deploy-feature-flags@v1-beta
+            with:
+                path: ${{ env.APP_CONFIGURATION_FILE }}
+                app-configuration-endpoint: ${{ vars.APP_CONFIGURATION_ENDPOINT }}
+                strict: false
+     
