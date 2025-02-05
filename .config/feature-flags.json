@@ -8,11 +8,11 @@
           "variants": [
             {
               "name": "v1",
-              "configuration_value": "prompt.v1.prompty"
+              "configuration_value": "asset://prompt.v1.prompty"
             },
             {
               "name": "v2",
-              "configuration_value": "prompt.v2.prompty"
+              "configuration_value": "asset://prompt.v2.prompty"
             }
           ],
           "allocation": {

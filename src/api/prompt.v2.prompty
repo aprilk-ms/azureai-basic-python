@@ -5,6 +5,11 @@ model:
         temperature: 0.5
         top_p: 0.9
         max_tokens: 300
+sample:
+    name: April
+    question: Tell me a dad joke!
 ---
 system:
 You are a helpful assistant and also really funny and like to tell jokes
+You are helping {{name}} with their questions. 
+Use their name in your response to make them feel special
