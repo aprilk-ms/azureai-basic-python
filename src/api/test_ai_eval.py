@@ -3,10 +3,15 @@ from fastapi.testclient import TestClient
 import json
 import os
 import uuid
-import pytest_asyncio
-from azure.ai.projects.aio import AIProjectClient
-from azure.ai.evaluation import evaluate, FluencyEvaluator
-from azure.identity import DefaultAzureCredential
+from azure.ai.evaluation import evaluate, FluencyEvaluator, RelevanceEvaluator, GroundednessEvaluator, SimilarityEvaluator, F1ScoreEvaluator, RougeScoreEvaluator, CoherenceEvaluator, RougeType
+
+def get_model_config():
+    return {
+        "type": "azure_openai",
+        "azure_deployment": "gpt-4o-mini",
+        "api_version": "2024-08-01-preview",
+        "azure_endpoint": "https://aoai-e6pnryr2q3qeg.openai.azure.com/"
+    }
 
 def get_eval_data_set():
     current_dir = os.path.dirname(__file__)
@@ -64,17 +69,14 @@ def test_generate_ai_eval_input():
             prompty_file = variant["configuration_value"]
             for data in get_eval_data_set():
                 query = data["query"]
-                response = client.post("/chat/stream", json={
+                response = client.post("/chat", json={
                     "messages": [
                         {"role": "user", "content": query},
                     ],
                     "prompt_override": prompty_file
                 })
 
-                answer = ""
-                for line in response.text.splitlines():
-                    answer += json.loads(line).get("delta", {}).get("content", "") or ""
-            
+                answer = response.text            
                 description = {"context": {"system-prompt": prompty_file}}
                 input = {
                     "id": str(uuid.uuid4()),
@@ -83,48 +85,39 @@ def test_generate_ai_eval_input():
                     "response": answer,
                     "ground_truth": data["ground-truth"],
                     "context": "prompty template variant: " + variant_name
-                }
+                },
                 evalInput += json.dumps(input) + "\n"
 
     output_path = "evaluation-input.jsonl"
     with open(output_path, "w") as file:
         file.write(evalInput)
 
-    #credential = DefaultAzureCredential()
-    # project_conn_str = os.environ["AZURE_AIPROJECT_CONNECTION_STRING"]
-    # project = AIProjectClient.from_connection_string(
-    #     credential=credential,
-    #     conn_str=project_conn_str
-    # )
-    # default_connection = project.connections._get_connection(
-    #     "aoai-e6pnryr2q3qeg_aoai"
-    # )
-    # deployment_name = "gpt-4o-mini"
-    # api_version = "2024-08-01-preview"
-    # model_config = {
-    #     "azure_deployment": deployment_name,
-    #     "api_version": api_version,
-    #     "type": "azure_openai",
-    #     "azure_endpoint": "https://aoai-e6pnryr2q3qeg.openai.azure.com/"
-    # }
-    # fluency_eval = FluencyEvaluator(model_config)
-    # eval_result = evaluate(
-    #     data=output_path,
-    #     evaluators= {
-    #         "FluencyEvaluator": fluency_eval
-    #     },
-    #     # column mapping
-    #     evaluator_config={
-    #         "groundedness": {
-    #             "column_mapping": {
-    #                 "query": "${data.queries}",
-    #                 "context": "${data.context}",
-    #                 "response": "${data.response}"
-    #             } 
-    #         }
-    #     },
-    #     # Optionally provide your Azure AI project information to track your evaluation results in your Azure AI project
-    #     azure_ai_project = project,
-    #     # Optionally provide an output path to dump a json of metric summary, row level data and metric and Azure AI project URL
-    #     output_path="./eval-results.json"
-    # )
+def test_run_ai_eval():
+    model_config = get_model_config()
+    output_path = "evaluation-results.json"
+    result = evaluate(
+        data="evaluation-input.jsonl",
+        evaluators={
+            "groundedness": GroundednessEvaluator(model_config),
+            "relevance": RelevanceEvaluator(model_config),
+            "fluency": FluencyEvaluator(model_config),
+            "coherence": CoherenceEvaluator(model_config),
+            "similarity": SimilarityEvaluator(model_config),
+            "f1score": F1ScoreEvaluator(),
+            "rougescore": RougeScoreEvaluator(RougeType.ROUGE_L),
+        },
+        evaluator_config={
+            "default": {
+                "column_mapping": {
+                    "query": "${data.query}",
+                    "context": "${data.context}",
+                    "response": "${data.response}",
+                    "ground_truth": "${data.ground_truth}",
+                } 
+            }
+        },
+        output_path=output_path
+    )
+
+    with open(output_path, "w") as file:
+        json.dump(result, file, indent=4)

@@ -7,7 +7,7 @@ model:
         max_tokens: 300
 sample:
     name: April
-    question: Tell me a dad joke!
+    question: Why did the chicken cross the road?
 ---
 system:
 You are a helpful assistant and also really funny and like to tell jokes
