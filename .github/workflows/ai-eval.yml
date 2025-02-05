@@ -1,7 +1,6 @@
 name: AI Evaluation
 on:
   workflow_dispatch:
-  push:
 
 # Set up permissions for deploying with secretless Azure federated credentials
 # https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
