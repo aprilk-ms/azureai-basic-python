@@ -3,7 +3,7 @@
     "feature_management": {
       "feature_flags": [
         {
-          "id": "prompt_file",
+          "id": "prompty_file",
           "enabled": true,
           "variants": [
             {
