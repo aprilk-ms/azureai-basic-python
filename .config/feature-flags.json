@@ -3,16 +3,16 @@
     "feature_management": {
       "feature_flags": [
         {
-          "id": "prompty_file",
+          "id": "prompt_asset",
           "enabled": true,
           "variants": [
             {
               "name": "v1",
-              "configuration_value": "asset://prompt.v1.prompty"
+              "configuration_value": "ai://assets/my-first-agent/prompt.v1.prompty"
             },
             {
               "name": "v2",
-              "configuration_value": "asset://prompt.v2.prompty"
+              "configuration_value": "ai://assets/my-first-agent/prompt.v2.prompty"
             }
           ],
           "allocation": {
