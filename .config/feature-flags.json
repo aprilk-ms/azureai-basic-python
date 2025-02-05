@@ -3,6 +3,39 @@
     "feature_management": {
       "feature_flags": [
         {
+          "id": "prompt_asset",
+          "enabled": true,
+          "variants": [
+            {
+              "name": "v1",
+              "configuration_value": "ai://assets/my-first-agent/prompt.v1.prompty"
+            },
+            {
+              "name": "v2",
+              "configuration_value": "ai://assets/my-first-agent/prompt.v2.prompty"
+            }
+          ],
+          "allocation": {
+            "percentile": [
+              {
+                "variant": "v1",
+                "from": 0,
+                "to": 50
+              },
+              {
+                "variant": "v2",
+                "from": 50,
+                "to": 100
+              }
+            ],
+            "default_when_enabled": "v1",
+            "default_when_disabled": "v1"
+          },
+          "telemetry": {
+            "enabled": true
+          }
+        },
+        {
           "id": "prompty_file",
           "enabled": true,
           "variants": [

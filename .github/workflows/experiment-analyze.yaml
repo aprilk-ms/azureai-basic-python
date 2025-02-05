@@ -18,7 +18,6 @@ env:
   METRIC_TAGS_ORDER: "Important, Usage, Cost, Performance, Errors, Feedback"
 
 on:
-  push:
   # trigger manually (via GitHub Actions UI)
   workflow_dispatch:
     inputs:
