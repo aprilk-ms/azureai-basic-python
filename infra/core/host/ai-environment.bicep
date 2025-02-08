@@ -29,6 +29,7 @@ param searchServiceName string = ''
 @description('The Azure Search connection name.')
 param searchConnectionName string = ''
 param tags object = {}
+param identityName string
 
 module hubDependencies '../ai/hub-dependencies.bicep' = {
   name: 'hubDependencies'
@@ -65,6 +66,11 @@ module hub '../ai/hub.bicep' = {
   }
 }
 
+resource projectIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: identityName
+  location: location
+}
+
 module project '../ai/project.bicep' = {
   name: 'project'
   params: {
@@ -74,6 +80,7 @@ module project '../ai/project.bicep' = {
     displayName: projectName
     hubName: hub.outputs.name
     keyVaultName: hubDependencies.outputs.keyVaultName
+    identityName: identityName
   }
 }
 
@@ -95,6 +102,7 @@ output keyVaultEndpoint string = hubDependencies.outputs.keyVaultEndpoint
 
 // Application Insights
 output applicationInsightsName string = hubDependencies.outputs.applicationInsightsName
+output applicationInsightsId string = hubDependencies.outputs.applicationInsightsId
 output logAnalyticsWorkspaceName string = hubDependencies.outputs.logAnalyticsWorkspaceName
 
 // Container Registry
@@ -114,3 +122,8 @@ output searchServiceEndpoint string = hubDependencies.outputs.searchServiceEndpo
 
 //Discoveryurl
 output discoveryUrl string = project.outputs.discoveryUrl
+
+output ProjectUserIdentityPrincipalId string = projectIdentity.properties.principalId
+output ProjectUserIdentityClientId string = projectIdentity.properties.clientId
+
+output aiServicesConnectionName string = aiServicesConnectionName

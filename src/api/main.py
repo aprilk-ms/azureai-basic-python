@@ -13,6 +13,9 @@ from fastapi.staticfiles import StaticFiles
 
 from .shared import globals
 
+from azure.ai.inference.tracing import AIInferenceInstrumentor 
+from azure.monitor.opentelemetry import configure_azure_monitor
+
 logger = logging.getLogger("azureaiapp")
 logger.setLevel(logging.INFO)
 
@@ -40,6 +43,12 @@ async def lifespan(app: fastapi.FastAPI):
 
     chat = await project.inference.get_chat_completions_client()
     prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / "prompt.prompty")
+
+    # Enable tracing
+    application_insights_connection_string = await project.telemetry.get_connection_string()
+    configure_azure_monitor(connection_string=application_insights_connection_string)
+    os.environ["AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED"] = "true"
+    AIInferenceInstrumentor().instrument() 
 
     globals["project"] = project
     globals["chat"] = chat

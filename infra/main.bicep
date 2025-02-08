@@ -203,6 +203,7 @@ module ai 'core/host/ai-environment.bicep' = if (empty(aiExistingProjectConnecti
     searchConnectionName: !useSearch
       ? ''
       : !empty(searchConnectionName) ? searchConnectionName : 'search-service-connection'
+    identityName: '${abbrs.managedIdentityUserAssignedIdentities}ai-project-${resourceToken}'
   }
 }
 
@@ -214,6 +215,27 @@ module logAnalytics 'core/monitor/loganalytics.bicep' = if (!empty(aiExistingPro
     location: location
     tags: tags
     name: logAnalyticsWorkspaceResolvedName
+  }
+}
+
+// Grant AI project LA workspace and openai access
+module aiProjectLogAnalyticsAccess 'core/security/role.bicep' = if (!empty(principalId)) {
+  name: 'ai-project-access-log-analytics-contributor'
+  scope: rg
+  params: {
+    principalId: ai.outputs.ProjectUserIdentityPrincipalId
+    roleDefinitionId: '92aaf0da-9dab-42b6-94a3-d43ce8d16293' // Log Analytics Contributor
+    principalType: 'ServicePrincipal'
+  }
+}
+
+module aiProjectOpenAIAccess 'core/security/role.bicep' = if (!empty(principalId)) {
+  name: 'ai-project-role-openai-contributor'
+  scope: rg
+  params: {
+    principalId: ai.outputs.ProjectUserIdentityPrincipalId
+    roleDefinitionId: 'a001fd3d-188f-4b5d-821b-7da978bf7442' // Cognitive Services OpenAI Contributor
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -325,12 +347,40 @@ module api 'api.bicep' = {
   }
 }
 
+// Provision App Configuration
+// module configStore 'core/config/configstore.bicep' = {
+//   name: 'configstore'
+//   scope: rg
+//   params: {
+//     location: location
+//     name: '${abbrs.appConfigurationStores}${resourceToken}'
+//     tags: tags
+//     principalId: api.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
+//   }
+// }
+
+
+// module experimentWorkspace 'core/config/experimentworkspace.bicep' = {
+//   name: 'expWorkspace'
+//   scope: rg
+//   params: {
+//     name: 'exp${substring(resourceToken, 0, 10)}'
+//     location: 'eastus2'
+//     tags: tags
+//     logAnalyticsWorkspaceName: ai.outputs.logAnalyticsWorkspaceName
+//     storageAccountName: ai.outputs.storageAccountName
+//     identityName: '${abbrs.managedIdentityUserAssignedIdentities}exp-${resourceToken}'
+//     appConfigName: configStore.outputs.name
+//   }
+// }
+
 output AZURE_RESOURCE_GROUP string = rg.name
 
 // Outputs required for local development server
 output AZURE_TENANT_ID string = tenant().tenantId
 output AZURE_AIPROJECT_CONNECTION_STRING string = projectConnectionString
 output AZURE_AI_CHAT_DEPLOYMENT_NAME string = chatDeploymentName
+output AZURE_AI_CONNECTION_NAME string = ai.outputs.aiServicesConnectionName
 
 // Outputs required by azd for ACA
 output AZURE_CONTAINER_ENVIRONMENT_NAME string = containerApps.outputs.environmentName
@@ -341,3 +391,8 @@ output SERVICE_API_NAME string = api.outputs.SERVICE_API_NAME
 output SERVICE_API_URI string = api.outputs.SERVICE_API_URI
 output SERVICE_API_IMAGE_NAME string = api.outputs.SERVICE_API_IMAGE_NAME
 output SERVICE_API_ENDPOINTS array = ['${api.outputs.SERVICE_API_URI}']
+
+output APPLICATION_INSIGHTS_RESOURCE_ID string = ai.outputs.applicationInsightsId
+output AZURE_AIPROJECT_USER_IDENTITY_PRINCIPAL_ID string = ai.outputs.ProjectUserIdentityPrincipalId
+output AZURE_AIPROJECT_USER_IDENTITY_CLIENT_ID string = ai.outputs.ProjectUserIdentityClientId
+//output EXPERIMENT_WORKSPACE_ID string = experimentWorkspace.outputs.expWorkspaceId

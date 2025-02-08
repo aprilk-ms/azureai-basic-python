@@ -96,6 +96,8 @@
             });
 
             try {
+
+                /*
                 const result = await client.getStreamedCompletion(messages);
 
                 let answer = "";
@@ -116,6 +118,12 @@
                         messageDiv.innerHTML = "Error: " + response.error;
                     }
                 }
+                */
+
+                const answer = await client.getCompletion(messages);
+                messageDiv.innerHTML = converter.makeHtml(answer);
+                messageDiv.scrollIntoView();
+
                 messages.push({
                     "role": "assistant",
                     "content": answer

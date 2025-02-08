@@ -58,3 +58,23 @@ async def chat_stream_handler(
                 )
 
     return fastapi.responses.StreamingResponse(response_stream())
+
+
+@router.post("/chat")
+async def chat_nostream_handler(
+    chat_request: ChatRequest
+):
+    chat_client = globals["chat"]
+    if chat_client is None:
+        raise Exception("Chat client not initialized")
+   
+    messages = [{"role": message.role, "content": message.content} for message in chat_request.messages]
+    model_deployment_name = globals["chat_model"]
+    prompt_messages = globals["prompt"].create_messages()
+
+    response = await chat_client.complete(
+        model=model_deployment_name, messages=prompt_messages + messages, stream=False
+    )
+    
+    answer = response.choices[0].message.content
+    return answer

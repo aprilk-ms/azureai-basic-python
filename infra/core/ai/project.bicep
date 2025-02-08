@@ -18,6 +18,11 @@ param publicNetworkAccess string = 'Enabled'
 
 param location string = resourceGroup().location
 param tags object = {}
+param identityName string
+
+resource userIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: identityName
+}
 
 resource project 'Microsoft.MachineLearningServices/workspaces@2024-01-01-preview' = {
   name: name
@@ -29,7 +34,8 @@ resource project 'Microsoft.MachineLearningServices/workspaces@2024-01-01-previe
   }
   kind: 'Project'
   identity: {
-    type: 'SystemAssigned'
+    type: 'SystemAssigned,UserAssigned'
+    userAssignedIdentities: { '${userIdentity.id}': {} }
   }
   properties: {
     friendlyName: displayName
