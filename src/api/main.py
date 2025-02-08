@@ -47,7 +47,6 @@ async def lifespan(app: fastapi.FastAPI):
     # Enable tracing
     application_insights_connection_string = await project.telemetry.get_connection_string()
     configure_azure_monitor(connection_string=application_insights_connection_string)
-    os.environ["AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED"] = "true"
     AIInferenceInstrumentor().instrument() 
 
     globals["project"] = project
