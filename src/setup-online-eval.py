@@ -63,11 +63,11 @@ model_config = {
 # id for each evaluator can be found in your Azure AI Foundry registry - please see documentation for more information
 # init_params is the configuration for the model to use to perform the evaluation
 # data_mapping is used to map the output columns of your query to the names required by the evaluator
-relevance_evaluator_config = EvaluatorConfiguration(
-    id="azureml://registries/azureml-staging/models/Relevance-Evaluator/versions/4",
-    init_params={"model_config": model_config},
-    data_mapping={"query": "${data.Input}", "response": "${data.Output}"}
-)
+# relevance_evaluator_config = EvaluatorConfiguration(
+#     id="azureml://registries/azureml-staging/models/Relevance-Evaluator/versions/4",
+#     init_params={"model_config": model_config},
+#     data_mapping={"query": "${data.Input}", "response": "${data.Output}"}
+# )
 
 # CoherenceEvaluator
 coherence_evaluator_config = EvaluatorConfiguration(
@@ -81,7 +81,7 @@ recurrence_trigger = RecurrenceTrigger(frequency="hour", interval=1)
 
 # Dictionary of evaluators
 evaluators = {
-    "relevance": relevance_evaluator_config,
+    #"relevance": relevance_evaluator_config,
     "coherence" : coherence_evaluator_config
 }
 
@@ -89,7 +89,7 @@ name = SAMPLE_NAME
 description = f"{SAMPLE_NAME} description"
 # AzureMSIClientId is the clientID of the User-assigned managed identity created during set-up - see documentation for how to find it
 # https://ms.portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/83c77e9f-bbc1-41a6-8956-4e36e992336f/appId/4610a06d-56a0-47ab-aeb6-cf95bc662052
-properties = {"AzureMSIClientId": ai_project_user_identity_client_id, "Environment": "azureml://registries/azureml-dev/environments/azureml-evaluations-built-in/versions/9"}
+properties = {"AzureMSIClientId": ai_project_user_identity_client_id, "Environment": "azureml://registries/azureml/environments/azureml-evaluations-built-in/versions/14"}
 
 # Configure the online evaluation schedule
 evaluation_schedule = EvaluationSchedule(
