@@ -3,6 +3,39 @@
     "feature_management": {
       "feature_flags": [
         {
+          "id": "eval_sampling",
+          "enabled": true,
+          "variants": [
+            {
+              "name": "On",
+              "configuration_value": true
+            },
+            {
+              "name": "Off",
+              "configuration_value": false
+            }
+          ],
+          "allocation": {
+            "percentile": [
+              {
+                "variant": "On",
+                "from": 0,
+                "to": 10
+              },
+              {
+                "variant": "Off",
+                "from": 50,
+                "to": 90
+              }
+            ],
+            "default_when_enabled": "Off",
+            "default_when_disabled": "Off"
+          },
+          "telemetry": {
+            "enabled": true
+          }
+        },
+        {
           "id": "prompt_asset",
           "enabled": true,
           "variants": [

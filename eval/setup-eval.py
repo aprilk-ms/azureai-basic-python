@@ -15,15 +15,13 @@ from azure.ai.evaluation import CoherenceEvaluator
 # Name of your online evaluation schedule
 SAMPLE_NAME = "online_eval_name"
 
-
-
 # Connection string to your Azure AI Foundry project
 # Currently, it should be in the format "<HostName>;<AzureSubscriptionId>;<ResourceGroup>;<HubName>"
 PROJECT_CONNECTION_STRING = "eastus2.api.azureml.ms;80d2c6c6-fa64-4ab1-8aa5-4e118c6b16ce;rg-aprilk-azure-ai-basic-01a;ai-project-e6pnryr2q3qeg"
 
 # Your Application Insights resource ID
 
-APPLICATION_INSIGHTS_RESOURCE_ID = "InstrumentationKey=224f19e4-ec6f-4b9b-8ddb-357ff3ca0394;IngestionEndpoint=https://eastus2-3.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus2.livediagnostics.monitor.azure.com/;ApplicationId=f029aec6-4f79-4301-b405-53ae1469a3a5"
+APPLICATION_INSIGHTS_RESOURCE_ID = "/subscriptions/80d2c6c6-fa64-4ab1-8aa5-4e118c6b16ce/resourceGroups/rg-aprilk-azure-ai-basic-01a/providers/Microsoft.Insights/components/appi-e6pnryr2q3qeg"
 
 # Kusto Query Language (KQL) query to query data from Application Insights resource
 # This query is compatible with data logged by the Azure AI Inferencing Tracing SDK (linked in documentation)
@@ -52,7 +50,7 @@ api_version = "2024-08-01-preview"
 
 # This is your Azure OpenAI Service connection name, which can be found in your Azure AI Foundry project under the 'Models + Endpoints' tab.
 default_connection = project_client.connections._get_connection(
-    "aoai-e6pnryr2q3qeg_aoai"
+    "aoai-e6pnryr2q3qeg"
 )
 
 model_config = {
@@ -66,11 +64,11 @@ model_config = {
 # id for each evaluator can be found in your Azure AI Foundry registry - please see documentation for more information
 # init_params is the configuration for the model to use to perform the evaluation
 # data_mapping is used to map the output columns of your query to the names required by the evaluator
-relevance_evaluator_config = EvaluatorConfiguration(
-    id="azureml://registries/azureml-staging/models/Relevance-Evaluator/versions/4",
-    init_params={"model_config": model_config},
-    data_mapping={"query": "${data.Input}", "response": "${data.Output}"}
-)
+# relevance_evaluator_config = EvaluatorConfiguration(
+#     id="azureml://registries/azureml-staging/models/Relevance-Evaluator/versions/4",
+#     init_params={"model_config": model_config},
+#     data_mapping={"query": "${data.Input}", "response": "${data.Output}"}
+# )
 
 # CoherenceEvaluator
 coherence_evaluator_config = EvaluatorConfiguration(
@@ -84,7 +82,6 @@ recurrence_trigger = RecurrenceTrigger(frequency="hour", interval=1)
 
 # Dictionary of evaluators
 evaluators = {
-    "relevance": relevance_evaluator_config,
     "coherence" : coherence_evaluator_config
 }
 
@@ -92,7 +89,7 @@ name = SAMPLE_NAME
 description = f"{SAMPLE_NAME} description"
 # AzureMSIClientId is the clientID of the User-assigned managed identity created during set-up - see documentation for how to find it
 # https://ms.portal.azure.com/#view/Microsoft_AAD_IAM/ManagedAppMenuBlade/~/Overview/objectId/83c77e9f-bbc1-41a6-8956-4e36e992336f/appId/4610a06d-56a0-47ab-aeb6-cf95bc662052
-properties = {"AzureMSIClientId": "c623a44d-a3b9-4485-95cc-db46967444e4", "Environment": "azureml://registries/azureml/environments/azureml-evaluations-built-in/versions/9"}
+properties = {"AzureMSIClientId": "c623a44d-a3b9-4485-95cc-db46967444e4", "Environment": "azureml://registries/azureml/environments/azureml-evaluations-built-in/versions/14"}
 
 # Configure the online evaluation schedule
 evaluation_schedule = EvaluationSchedule(
@@ -103,5 +100,5 @@ evaluation_schedule = EvaluationSchedule(
     properties=properties)
 
 # Create the online evaluation schedule 
-#created_evaluation_schedule = project_client.evaluations.create_or_replace_schedule(name, evaluation_schedule)
-#print(f"Successfully submitted the online evaluation schedule creation request - {created_evaluation_schedule.name}, currently in {created_evaluation_schedule.provisioning_state} state.")
+created_evaluation_schedule = project_client.evaluations.create_or_replace_schedule(name, evaluation_schedule)
+print(f"Successfully submitted the online evaluation schedule creation request - {created_evaluation_schedule.name}, currently in {created_evaluation_schedule.provisioning_state} state.")

@@ -36,7 +36,7 @@
             <template id="message-template-assistant">
                 <div class="toast-container position-static w-100 d-flex flex-column align-items-stretch">
                         <div class="toast fade show w-75 rounded-3 align-self-start">
-                            <div class="toast-header text-light background-assistant">
+                            <div class="toast-header text-light background-assistant message-title">
                                 <i class="bi bi-robot me-1" aria-hidden="true"></i>
                                 <strong class="me-auto text-capitalize">
                                     Assistant
@@ -77,6 +77,15 @@
         const messages = [];
 
         const client = new ChatProtocol.AIChatProtocolClient("/chat");
+        const sessionId = generateGUID();
+        console.info("Session ID: " + sessionId);
+
+        function generateGUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }        
 
         form.addEventListener("submit", async function(e) {
             e.preventDefault();
@@ -88,6 +97,7 @@
 
             const assistantTemplateClone = assistantTemplate.content.cloneNode(true);
             let messageDiv = assistantTemplateClone.querySelector(".message-content");
+            let messageTitleDiv = assistantTemplateClone.querySelector(".message-title");
             targetContainer.appendChild(assistantTemplateClone);
 
             messages.push({
@@ -118,7 +128,8 @@
                     }
                 }*/
 
-                const answer = await client.getCompletion(messages);
+                const response = await client.getCompletion(messages, { "sessionState": { "sessionId": sessionId }});
+                const answer = response.answer;
 
                 messageDiv.innerHTML = converter.makeHtml(answer);
                 messageDiv.scrollIntoView();
@@ -127,6 +138,10 @@
                     "role": "assistant",
                     "content": answer
                 });
+
+                if (response.variant) {
+                    messageTitleDiv.innerHTML += ` (Prompt Variant: ${response.variant})`;
+                }
 
                 messageInput.value = "";
             } catch (error) {

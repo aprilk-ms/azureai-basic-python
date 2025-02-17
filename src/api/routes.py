@@ -13,12 +13,14 @@ import pathlib
 from azure.ai.inference.prompts import PromptTemplate
 
 from .shared import globals
-from azure.core.settings import settings 
 
 from opentelemetry.baggage import get_baggage
-from azure.ai.inference.aio import ChatCompletionsClient
+from azure.ai.evaluation import CoherenceEvaluator, FluencyEvaluator, RelevanceEvaluator, ViolenceEvaluator, SexualEvaluator, HateUnfairnessEvaluator, ProtectedMaterialEvaluator, ContentSafetyEvaluator
+import asyncio
+from opentelemetry.baggage import set_baggage, get_baggage
+from opentelemetry.context import attach
+from featuremanagement import TargetingContext
 
-settings.tracing_implementation = "opentelemetry" 
 router = fastapi.APIRouter()
 templates = Jinja2Templates(directory="api/templates")
 
@@ -31,6 +33,7 @@ class Message(pydantic.BaseModel):
 class ChatRequest(pydantic.BaseModel):
     messages: list[Message]
     prompt_override: str = None
+    sessionState: dict = {}
 
 @router.get("/test/hello")
 async def test():
@@ -58,7 +61,7 @@ async def chat_stream_handler(
         if chat_request.prompt_override:
             prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / chat_request.prompt_override)
         else:                       
-            prompt_variant = feature_manager.get_variant("prompty_file", targeting_id) # replace this with prompt_asset
+            prompt_variant = feature_manager.get_variant("prompty_file") # replace this with prompt_asset
             if prompt_variant and prompt_variant.configuration:
                 prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / prompt_variant.configuration)
             else:
@@ -88,9 +91,13 @@ async def chat_stream_handler(
     return fastapi.responses.StreamingResponse(response_stream())
 
 
+def get_targeting_context():
+    return TargetingContext(user_id=get_baggage("Microsoft.TargetingId"))
+
 @router.post("/chat")
 async def chat_nostream_handler(
-    chat_request: ChatRequest
+    chat_request: ChatRequest,
+    request: Request
 ):
     chat_client = globals["chat"]
     if chat_client is None:
@@ -99,15 +106,20 @@ async def chat_nostream_handler(
     messages = [{"role": message.role, "content": message.content} for message in chat_request.messages]
     model_deployment_name = globals["chat_model"]
     feature_manager = globals["feature_manager"] 
-    targeting_id = get_baggage("Microsoft.TargetingId") or str(uuid.uuid4())
+
+    targeting_id = chat_request.sessionState['sessionId'] or str(uuid.uuid4())
+    attach(set_baggage("Microsoft.TargetingId", targeting_id))
     
     # figure out which prompty template to use (replace file to API)
+    variant = "none"
     if chat_request.prompt_override:
         prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / chat_request.prompt_override)
+        variant = chat_request.prompt_override
     else:                       
-        prompt_variant = feature_manager.get_variant("prompty_file", targeting_id) # replace this with prompt_asset
+        prompt_variant = feature_manager.get_variant("prompty_file") # replace this with prompt_asset
         if prompt_variant and prompt_variant.configuration:
             prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / prompt_variant.configuration)
+            variant = prompt_variant.name
         else:
             prompt = globals["prompt"]
 
@@ -117,9 +129,40 @@ async def chat_nostream_handler(
         response = await chat_client.complete(
             model=model_deployment_name, messages=prompt_messages + messages, stream=False
         )
+        track_event("RequestMade", targeting_id)
     except Exception as e:
         error = {"Error": str(e)}
         track_event("ErrorLLM", targeting_id, error)
         
     answer = response.choices[0].message.content
-    return answer
+
+    # eval_sampling = feature_manager.get_variant("eval_sampling", targeting_id)
+    # if eval_sampling and eval_sampling.configuration == True:
+    # eval_input = { "conversation": { "messages": messages } }
+    # project = globals["project"]
+    #asyncio.create_task(run_evals(eval_input, targeting_id, project.scope, DefaultAzureCredential()))
+   
+    return { "answer": answer, "variant": variant }
+
+async def run_evals(eval_input, targeting_id, ai_project_scope, credential):
+    run_eval(FluencyEvaluator, eval_input, targeting_id)
+    run_eval(RelevanceEvaluator, eval_input, targeting_id)
+    run_eval(CoherenceEvaluator, eval_input, targeting_id)
+
+    run_safety_eval(ViolenceEvaluator, eval_input, targeting_id, ai_project_scope, credential)
+    run_safety_eval(SexualEvaluator, eval_input, targeting_id, ai_project_scope, credential)
+    run_safety_eval(HateUnfairnessEvaluator, eval_input, targeting_id, ai_project_scope, credential)
+    run_safety_eval(ProtectedMaterialEvaluator, eval_input, targeting_id, ai_project_scope, credential)
+    run_safety_eval(ContentSafetyEvaluator, eval_input, targeting_id, ai_project_scope, credential)
+
+def run_safety_eval(evaluator, eval_input, targeting_id, ai_project_scope, credential):
+    eval = evaluator(credential=credential, azure_ai_project=ai_project_scope)
+    score = eval(**eval_input)
+    score.update({"evaluator_id": eval.id})
+    track_event("gen.ai." + type(eval).__name__, targeting_id, score)
+
+def run_eval(evaluator, eval_input, targeting_id):
+    eval = evaluator(globals["model_config"])
+    score = eval(**eval_input)
+    score.update({"evaluator_id": evaluator.id})
+    track_event("gen.ai." + evaluator.__name__, targeting_id, score)

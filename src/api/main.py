@@ -6,12 +6,14 @@ from typing import Union, Any
 
 import fastapi
 from azure.ai.projects.aio import AIProjectClient
+from azure.ai.projects.models import ConnectionType
 from azure.ai.inference.prompts import PromptTemplate
 from azure.identity import AzureDeveloperCliCredential, ManagedIdentityCredential
 from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 
 from .shared import globals
+from .routes import get_targeting_context
 
 from azure.ai.inference.tracing import AIInferenceInstrumentor 
 from azure.monitor.opentelemetry import configure_azure_monitor
@@ -21,12 +23,18 @@ from azure.appconfiguration.provider import load
 from featuremanagement import FeatureManager
 from featuremanagement.azuremonitor import publish_telemetry
 
+from featuremanagement import FeatureManager
+from featuremanagement.azuremonitor import TargetingSpanProcessor,publish_telemetry
+
+
 from opentelemetry.baggage import get_baggage
 from opentelemetry.sdk.trace import Span, SpanProcessor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.baggage import set_baggage
 from opentelemetry.context import attach
 from opentelemetry.sdk.trace import Span
+
+from azure.core.settings import settings 
 
 import uuid
 
@@ -53,13 +61,27 @@ async def lifespan(app: fastapi.FastAPI):
         credential=azure_credential,
         conn_str=os.environ["AZURE_AIPROJECT_CONNECTION_STRING"],
     )
+    # default_connection = await project.connections.get_default(connection_type=ConnectionType.AZURE_OPEN_AI)
+    # deployment_name = os.environ["AZURE_AI_CHAT_DEPLOYMENT_NAME"]
+    # api_version = "2024-08-01-preview"
+    # model_config = default_connection.to_evaluator_model_config(
+    #     deployment_name=deployment_name, api_version=api_version
+    # )
+    model_config = {
+        "type": "azure_openai",
+        "azure_deployment": "gpt-4o-mini",
+        "api_version": "2024-08-01-preview",
+        "azure_endpoint": "https://aoai-e6pnryr2q3qeg.openai.azure.com/"
+    }
 
     chat = await project.inference.get_chat_completions_client()
     prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / "prompt.v1.prompty")
 
+
     # Enable tracing
     application_insights_connection_string = await project.telemetry.get_connection_string()
-    configure_azure_monitor(connection_string=application_insights_connection_string, span_processors=[TargetingSpanProcessor()])
+    configure_azure_monitor(connection_string=application_insights_connection_string, span_processors=[TargetingSpanProcessor(targeting_context_accessor=get_targeting_context)])
+    settings.tracing_implementation = "opentelemetry" 
     AIInferenceInstrumentor().instrument() 
 
     # Inititalize the feature manager
@@ -71,13 +93,18 @@ async def lifespan(app: fastapi.FastAPI):
         feature_flag_refresh_enabled=True,
         refresh_interval=30,  # 30 seconds
     )
-    feature_manager = FeatureManager(app_config, on_feature_evaluated=publish_telemetry)
+    feature_manager = FeatureManager(app_config, targeting_context_accessor=get_targeting_context, on_feature_evaluated=publish_telemetry)
+    #feature_manager = FeatureManager(app_config, on_feature_evaluated=publish_telemetry)
 
+
+
+   
     globals["project"] = project
     globals["chat"] = chat
     globals["prompt"] = prompt
     globals["chat_model"] = os.environ["AZURE_AI_CHAT_DEPLOYMENT_NAME"]
     globals["feature_manager"] = feature_manager
+    globals["model_config"] = model_config
 
     yield
 
@@ -85,22 +112,22 @@ async def lifespan(app: fastapi.FastAPI):
 
     await chat.close()
 
-# Below will be replaced by a helper function from App Config SD
+# Below will be replaced by a helper function from App Config SDK
 
-class TargetingSpanProcessor(SpanProcessor):
-    def on_start(
-        self,
-        span: "Span",
-        parent_context = None,
-    ):
-        if (get_baggage("Microsoft.TargetingId", parent_context) != None):
-            span.set_attribute("TargetingId", get_baggage("Microsoft.TargetingId", parent_context))
+# class TargetingSpanProcessor(SpanProcessor):
+#     def on_start(
+#         self,
+#         span: "Span",
+#         parent_context = None,
+#     ):
+#         if (get_baggage("Microsoft.TargetingId", parent_context) != None):
+#             span.set_attribute("TargetingId", get_baggage("Microsoft.TargetingId", parent_context))
 
-def server_request_hook(span: Span, scope: dict[str, Any]):
-     if span and span.is_recording():
-        targeting_id = str(uuid.uuid4())
-        attach(set_baggage("Microsoft.TargetingId", targeting_id))
-        span.set_attribute("TargetingId", targeting_id)
+# def server_request_hook(span: Span, scope: dict[str, Any]):
+#      if span and span.is_recording():
+#         targeting_id = str(uuid.uuid4())
+#         attach(set_baggage("Microsoft.TargetingId", targeting_id))
+#         span.set_attribute("TargetingId", targeting_id)
 
 # End Targeting Id code
 
@@ -118,6 +145,6 @@ def create_app():
 
     app.include_router(routes.router)
 
-    FastAPIInstrumentor.instrument_app(app, server_request_hook=server_request_hook)
+    FastAPIInstrumentor.instrument_app(app) #, server_request_hook=server_request_hook)
 
     return app
