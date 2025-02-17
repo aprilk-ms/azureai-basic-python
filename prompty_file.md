@@ -5,8 +5,8 @@
 
 * ✨ **Feature flag:** prompty_file
 * 🔬 **Allocation ID:** Qi7LDcLPLBNCx5IM4AUV
-* 📅 **Analysis period:** 0.2 days (02/05/2025 03:00 - 02/05/2025 07:00 UTC)
-* 🔖 **Scorecard ID:** 400010051
+* 📅 **Analysis period:** 3.0 days (02/05/2025 03:00 - 02/08/2025 03:00 UTC)
+* 🔖 **Scorecard ID:** 400010054
 
 ### Summary of variants
 
