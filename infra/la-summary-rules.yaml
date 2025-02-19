@@ -9,20 +9,6 @@ summaryRules:
       let other_supported_keys = dynamic(["gen_ai.response.model", "gen_ai.openai.api_version"]);
       let supported_keys = set_union(otel_genai_semantic_convention_keys, other_supported_keys);
       let targetingid_keys = dynamic(["traceloop.association.properties.TargetingId", "traceloop.association.properties.targetingid", "traceloop.association.properties.targetingId", "traceloop.association.properties.targeting_id", "TargetingId", "targetingid", "targetingId", "targeting_id"]);
-      let operationId_to_Targeting_Id = AppDependencies
-      | where Properties has "TargetingId" and Properties['TargetingId'] != ""
-      | extend TargetingId = Properties['TargetingId']
-      | project TargetingId, OperationId
-      | summarize TargetingId=any(TargetingId) by OperationId;
-      let eval_data = AppTraces
-      | extend event_name_ = tostring(Properties.["event.name"])
-      | extend gen_ai_evaluation_score_ = todouble(Properties.["gen_ai.evaluation.score"])
-      | extend gen_ai_response_id_ = tostring(Properties.["gen_ai.response_id"])
-      | where gen_ai_response_id_ != ""
-      | where event_name_ startswith "gen_ai.evaluation."
-      | join kind=inner operationId_to_Targeting_Id on OperationId
-      | extend span_gen_ai_response_id_ = tostring(Properties.["gen_ai.response.id"])
-      | project Name=event_name_, TimeGenerated, ItemCount, Properties=pack("gen_ai.evaluation.score", gen_ai_evaluation_score_, "TargetingId", TargetingId, "gen_ai.response_id", gen_ai_response_id_, "OperationId", OperationId);
       AppDependencies
       | where Properties has "gen_ai.system"
       | where Properties has "targetingid" or Properties has "targeting_id"
@@ -47,4 +33,3 @@ summaryRules:
       | extend Properties = bag_merge(newProperties, stop, tool_calls, content_filter, length)
       | extend Name = "gen_ai.otel.span"
       | project Name, TimeGenerated, ItemCount, Properties
-      | union eval_data
