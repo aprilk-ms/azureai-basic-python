@@ -48,4 +48,3 @@ summaryRules:
       | extend Name = "gen_ai.otel.span"
       | project Name, TimeGenerated, ItemCount, Properties
       | union eval_data
-      | where Name != "gen_ai.otel.span"
