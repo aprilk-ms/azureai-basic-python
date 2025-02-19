@@ -20,7 +20,7 @@ summaryRules:
       | project Name=event_name_, TimeGenerated, ItemCount, Properties=pack("gen_ai.evaluation.score", gen_ai_evaluation_score_, "TargetingId", TargetingId, "gen_ai.response_id", gen_ai_response_id_, "OperationId", OperationId)          tool_calls = iff(Properties["gen_ai.response.finish_reasons"] has "tool_calls", bag_pack("gen_ai.response.finish_reason.tool_calls", 1), dynamic({})),
                 content_filter = iff(Properties["gen_ai.response.finish_reasons"] has "content_filter", bag_pack("gen_ai.response.finish_reason.content_filter", 1), dynamic({})),
                 length = iff(Properties["gen_ai.response.finish_reasons"] has "length", bag_pack("gen_ai.response.finish_reason.length", 1), dynamic({}))
-            | extend Properties = bag_merge(newProperties, stop, tool_calls, content_filter, length)
-            | extend Name = "gen_ai.otel.span"
-            | project Name, TimeGenerated, ItemCount, Properties
-            | union eval_data
+      | extend Properties = bag_merge(newProperties, stop, tool_calls, content_filter, length)
+      | extend Name = "gen_ai.otel.span"
+      | project Name, TimeGenerated, ItemCount, Properties
+      | union eval_data
