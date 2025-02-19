@@ -2,7 +2,7 @@ summaryRules:
   - name: "Online-Experimentation-GenAI"
     binSize: 20
     destinationTable: AppEvents_CL
-    description: "Summary rule definition for non-eval GenAI metrics. For use to convert metrics from GenAI spans logged following OpenTelemetry v1.27+ semantic conventions."
+    description: "Summary rule definition for Azure AI evaluation-based GenAI metrics."
     query: |
       let operationId_to_Targeting_Id = AppDependencies
       | where Properties has "TargetingId" and Properties['TargetingId'] != ""
