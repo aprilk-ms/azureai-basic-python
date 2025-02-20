@@ -20,6 +20,7 @@ import asyncio
 from opentelemetry.baggage import set_baggage, get_baggage
 from opentelemetry.context import attach
 from featuremanagement import TargetingContext
+from azure.identity import DefaultAzureCredential
 
 router = fastapi.APIRouter()
 templates = Jinja2Templates(directory="api/templates")
@@ -107,7 +108,7 @@ async def chat_nostream_handler(
     model_deployment_name = globals["chat_model"]
     feature_manager = globals["feature_manager"] 
 
-    targeting_id = chat_request.sessionState['sessionId'] or str(uuid.uuid4())
+    targeting_id = chat_request.sessionState.get('sessionId', str(uuid.uuid4()))
     attach(set_baggage("Microsoft.TargetingId", targeting_id))
     
     # figure out which prompty template to use (replace file to API)
@@ -130,19 +131,41 @@ async def chat_nostream_handler(
             model=model_deployment_name, messages=prompt_messages + messages, stream=False
         )
         track_event("RequestMade", targeting_id)
+        answer = response.choices[0].message.content
     except Exception as e:
         error = {"Error": str(e)}
-        track_event("ErrorLLM", targeting_id, error)
-        
-    answer = response.choices[0].message.content
+        track_event("ErrorLLM", targeting_id, error)       
+        return { "answer": str(e), "variant": variant }    
 
+
+    # conversation = {}
+
+    # # initialize the evaluation client
+    # # optional parameter to configure sampling
+    # eval_client = await project.evaluation.get_evaluation_client(sampling_config=0.1)
+
+    # eval_config = {
+    #     # Required: built-in or custom evaluators
+    #     "evaluators" : ["fluency", "content-safety"],
+    #     # Optional: properties to log with the evaluation results
+    #     "additional_metadata": {
+    #         "prompt-variant": variant,
+    #         "targeting-id": targeting_id
+    #     }
+    # }
+    
+    # # submit remote evaluation request, results will be sent to app insights
+    # eval_request = await eval_client.submit_request(conversation, eval_config)
+    
     # eval_sampling = feature_manager.get_variant("eval_sampling", targeting_id)
     # if eval_sampling and eval_sampling.configuration == True:
-    # eval_input = { "conversation": { "messages": messages } }
+    #     eval_input = { "conversation": { "messages": messages } }
     # project = globals["project"]
-    #asyncio.create_task(run_evals(eval_input, targeting_id, project.scope, DefaultAzureCredential()))
    
+    # asyncio.create_task(run_evals(eval_input, targeting_id, project.scope, DefaultAzureCredential()))
+    
     return { "answer": answer, "variant": variant }
+    
 
 async def run_evals(eval_input, targeting_id, ai_project_scope, credential):
     run_eval(FluencyEvaluator, eval_input, targeting_id)

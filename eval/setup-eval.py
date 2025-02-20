@@ -6,7 +6,7 @@ from azure.ai.projects.models import (
     EvaluationSchedule,
     RecurrenceTrigger,
 )
-from azure.ai.evaluation import CoherenceEvaluator 
+from azure.ai.evaluation import CoherenceEvaluator, FluencyEvaluator, RelevanceEvaluator, ViolenceEvaluator, SexualEvaluator, HateUnfairnessEvaluator, ProtectedMaterialEvaluator, ContentSafetyEvaluator
 
 # This sample includes the setup for an online evaluation schedule using the Azure AI Project SDK and Azure AI Evaluation SDK
 # The schedule is configured to run daily over the collected trace data while running two evaluators: CoherenceEvaluator and RelevanceEvaluator
@@ -28,7 +28,7 @@ APPLICATION_INSIGHTS_RESOURCE_ID = "/subscriptions/80d2c6c6-fa64-4ab1-8aa5-4e118
 # You can modify it depending on your data schema
 # The KQL query must output these required columns: operation_ID, operation_ParentID, and gen_ai_response_id
 # You can choose which other columns to output as required by the evaluators you are using
-KUSTO_QUERY = "let gen_ai_spans=(dependencies | where isnotnull(customDimensions[\"gen_ai.system\"]) | extend response_id = tostring(customDimensions[\"gen_ai.response.id\"]) | project id, operation_Id, operation_ParentId, timestamp, response_id); let gen_ai_events=(traces | where message in (\"gen_ai.choice\", \"gen_ai.user.message\", \"gen_ai.system.message\") or tostring(customDimensions[\"event.name\"]) in (\"gen_ai.choice\", \"gen_ai.user.message\", \"gen_ai.system.message\") | project id= operation_ParentId, operation_Id, operation_ParentId, user_input = iff(message == \"gen_ai.user.message\" or tostring(customDimensions[\"event.name\"]) == \"gen_ai.user.message\", parse_json(iff(message == \"gen_ai.user.message\", tostring(customDimensions[\"gen_ai.event.content\"]), message)).content, \"\"), system = iff(message == \"gen_ai.system.message\" or tostring(customDimensions[\"event.name\"]) == \"gen_ai.system.message\", parse_json(iff(message == \"gen_ai.system.message\", tostring(customDimensions[\"gen_ai.event.content\"]), message)).content, \"\"), llm_response = iff(message == \"gen_ai.choice\", parse_json(tostring(parse_json(tostring(customDimensions[\"gen_ai.event.content\"])).message)).content, iff(tostring(customDimensions[\"event.name\"]) == \"gen_ai.choice\", parse_json(parse_json(message).message).content, \"\")) | summarize operation_ParentId = any(operation_ParentId), Input = maxif(user_input, user_input != \"\"), System = maxif(system, system != \"\"), Output = maxif(llm_response, llm_response != \"\") by operation_Id, id); gen_ai_spans | join kind=inner (gen_ai_events) on id, operation_Id | project Input, System, Output, operation_Id, operation_ParentId, gen_ai_response_id = response_id"
+KUSTO_QUERY = "let gen_ai_spans=(dependencies | where isnotnull(customDimensions[\"gen_ai.system\"]) | extend response_id = tostring(customDimensions[\"gen_ai.response.id\"]) | project id, operation_Id, operation_ParentId, timestamp, response_id); let gen_ai_events=(traces | where message in (\"gen_ai.choice\", \"gen_ai.user.message\", \"gen_ai.system.message\") or tostring(customDimensions[\"event.name\"]) in (\"gen_ai.choice\", \"gen_ai.user.message\", \"gen_ai.system.message\") | project id= operation_ParentId, operation_Id, operation_ParentId, user_input = iff(message == \"gen_ai.user.message\" or tostring(customDimensions[\"event.name\"]) == \"gen_ai.user.message\", parse_json(iff(message == \"gen_ai.user.message\", tostring(customDimensions[\"gen_ai.event.content\"]), message)).content, \"\"), system = iff(message == \"gen_ai.system.message\" or tostring(customDimensions[\"event.name\"]) == \"gen_ai.system.message\", parse_json(iff(message == \"gen_ai.system.message\", tostring(customDimensions[\"gen_ai.event.content\"]), message)).content, \"\"), llm_response = iff(message == \"gen_ai.choice\", parse_json(tostring(parse_json(tostring(customDimensions[\"gen_ai.event.content\"])).message)).content, iff(tostring(customDimensions[\"event.name\"]) == \"gen_ai.choice\", parse_json(parse_json(message).message).content, \"\")) | summarize operation_ParentId = any(operation_ParentId), Input = maxif(user_input, user_input != \"\"), System = maxif(system, system != \"\"), Output = maxif(llm_response, llm_response != \"\") by operation_Id, id); gen_ai_spans | join kind=inner (gen_ai_events) on id, operation_Id | project Input, System, Output, operation_Id, operation_ParentId, gen_ai_response_id = response_id | where gen_ai_response_id != \"\""
 
 
 
@@ -71,18 +71,47 @@ model_config = {
 # )
 
 # CoherenceEvaluator
-coherence_evaluator_config = EvaluatorConfiguration(
-    id=CoherenceEvaluator.id,
-    init_params={"model_config": model_config},
-    data_mapping={"query": "${data.Input}", "response": "${data.Output}"}
-)
+def get_evaluator_config(evaluator_id, model_config):
+    return EvaluatorConfiguration(
+        id=evaluator_id,
+        init_params={"model_config": model_config},
+        data_mapping={"query": "${data.Input}", "response": "${data.Output}"}
+    )
+
+def get_evaluator_config_safety(evaluator_id, azure_ai_project_scope):
+    return EvaluatorConfiguration(
+        id=evaluator_id,
+        init_params={"azure_ai_project": azure_ai_project_scope},
+        data_mapping={"query": "${data.Input}", "response": "${data.Output}"}
+    )
+
+# coherence_evaluator_config = create_evaluator_config(
+#     CoherenceEvaluator,
+#     model_config,
+#     {"query": "${data.Input}", "response": "${data.Output}"}
+# )
+
+# fluency_evaluator_config = create_evaluator_config(
+#     FluencyEvaluator,
+#     model_config,
+#     {"query": "${data.Input}", "response": "${data.Output}"}
+# )
 
 # Frequency to run the schedule
 recurrence_trigger = RecurrenceTrigger(frequency="hour", interval=1)
 
+credential = DefaultAzureCredential()
+
 # Dictionary of evaluators
 evaluators = {
-    "coherence" : coherence_evaluator_config
+    "coherence" : get_evaluator_config(CoherenceEvaluator.id, model_config),
+    "fluency" : get_evaluator_config(FluencyEvaluator.id, model_config),
+    "relevance" : get_evaluator_config(RelevanceEvaluator.id, model_config),
+    "violence" : get_evaluator_config_safety(ViolenceEvaluator.id, project_client.scope),
+    "sexual" : get_evaluator_config_safety(SexualEvaluator.id, project_client.scope),
+    "hateUnfairness" : get_evaluator_config_safety(HateUnfairnessEvaluator.id, project_client.scope),
+    "protectedMaterial" : get_evaluator_config_safety(ProtectedMaterialEvaluator.id, project_client.scope),
+    "contentSafety" : get_evaluator_config_safety(ContentSafetyEvaluator.id, project_client.scope)
 }
 
 name = SAMPLE_NAME
