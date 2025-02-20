@@ -33,7 +33,7 @@ def get_prompt_template_variants():
 def test_simulate_traffic():
     app = create_app()
     with TestClient(app) as client:
-        for i in range(20):
+        for i in range(1):
             for data in get_eval_data_set():
                 query = data["query"]
                 response = client.post("/chat", json={

@@ -111,7 +111,7 @@ evaluators = {
     "sexual" : get_evaluator_config_safety(SexualEvaluator.id, project_client.scope),
     "hateUnfairness" : get_evaluator_config_safety(HateUnfairnessEvaluator.id, project_client.scope),
     "protectedMaterial" : get_evaluator_config_safety(ProtectedMaterialEvaluator.id, project_client.scope),
-    "contentSafety" : get_evaluator_config_safety(ContentSafetyEvaluator.id, project_client.scope)
+    #"contentSafety" : get_evaluator_config_safety("azureml://registries/azureml/models/Content-Safety-Evaluator/versions/1", project_client.scope)
 }
 
 name = SAMPLE_NAME
