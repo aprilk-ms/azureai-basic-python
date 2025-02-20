@@ -1,5 +1,5 @@
 summaryRules:
-  - name: "Online-Experimentation-GenAI"
+  - name: "Online-Experimentation-GenAI-eval"
     binSize: 20
     destinationTable: AppEvents_CL
     description: "Summary rule definition for Azure AI evaluation-based GenAI metrics."
