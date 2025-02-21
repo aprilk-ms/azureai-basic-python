@@ -288,7 +288,7 @@
         }
       },
       {
-        "id": "genai_evaluation_protectedMaterial",
+        "id": "genai_evaluation_protected_material",
         "displayName": "Protected material score",
         "description": "Protected material score by Azure AI content safety API. The Protected material detection APIs scan the output of large language models to identify and flag known protected material. See (https://learn.microsoft.com/en-us/azure/ai-services/content-safety/concepts/protected-material?tabs=text) for more details.",
         "lifecycle": "Active",
@@ -298,14 +298,14 @@
         "desiredDirection": "Decrease",
         "definition": {
           "kind": "Average",
-          "event": {
+          "value": {
             "eventName": "gen_ai.evaluation.protectedMaterial",
             "eventProperty": "gen_ai.ai.evaluation.score"
           }
         }
       },
       {
-        "id": "genai_evaluation_hateUnfairness",
+        "id": "genai_evaluation_hate_unfairness",
         "displayName": "Hate unfairness score",
         "description": "Hate and unfair score given by Azure AI evaluation. Hateful and unfair content refers to any language pertaining to hate toward or unfair representations of individuals and social groups along factors including but not limited to race, ethnicity, nationality, gender, sexual orientation, religion, immigration status, ability, personal appearance, and body size. Unfairness occurs when AI systems treat or represent social groups inequitably, creating or contributing to societal inequities. Safety evaluations annotate self-harm-related content using a 0-7 scale. See (https://learn.microsoft.com/en-us/python/api/azure-ai-evaluation/azure.ai.evaluation.hateunfairnessevaluator?view=azure-python) for more details.",
         "lifecycle": "Active",
@@ -315,7 +315,7 @@
         "desiredDirection": "Decrease",
         "definition": {
           "kind": "Average",
-          "event": {
+          "value": {
             "eventName": "gen_ai.evaluation.hateUnfairness",
             "eventProperty": "gen_ai.ai.evaluation.score"
           }
@@ -332,7 +332,7 @@
         "desiredDirection": "Decrease",
         "definition": {
           "kind": "Average",
-          "event": {
+          "value": {
             "eventName": "gen_ai.evaluation.sexual",
             "eventProperty": "gen_ai.ai.evaluation.score"
           }
@@ -349,7 +349,7 @@
         "desiredDirection": "Decrease",
         "definition": {
           "kind": "Average",
-          "event": {
+          "value": {
             "eventName": "gen_ai.evaluation.violence",
             "eventProperty": "gen_ai.ai.evaluation.score"
           }
@@ -366,7 +366,7 @@
         "desiredDirection": "Increase",
         "definition": {
           "kind": "Average",
-          "event": {
+          "value": {
             "eventName": "gen_ai.evaluation.relevance",
             "eventProperty": "gen_ai.ai.evaluation.score"
           }
@@ -383,7 +383,7 @@
         "desiredDirection": "Increase",
         "definition": {
           "kind": "Average",
-          "event": {
+          "value": {
             "eventName": "gen_ai.evaluation.fluency",
             "eventProperty": "gen_ai.ai.evaluation.score"
           }
@@ -400,7 +400,7 @@
         "desiredDirection": "Increase",
         "definition": {
           "kind": "Average",
-          "event": {
+          "value": {
             "eventName": "gen_ai.evaluation.coherence",
             "eventProperty": "gen_ai.ai.evaluation.score"
           }
