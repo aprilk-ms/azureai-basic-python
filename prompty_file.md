@@ -5,15 +5,15 @@
 
 * ✨ **Feature flag:** prompty_file
 * 🔬 **Allocation ID:** cP_8eVbhELWLSLnV9WcR
-* 📅 **Analysis period:** 0.0 days (02/20/2025 03:47 - 02/20/2025 04:47 UTC)
-* 🔖 **Scorecard ID:** 400011058
+* 📅 **Analysis period:** 3.0 days (02/20/2025 03:47 - 02/23/2025 03:47 UTC)
+* 🔖 **Scorecard ID:** 400011062
 
 ### Summary of variants
 
 | Variant 💊 | Type | Allocation | Assignment | Data quality | Treatment effect |
 |:--------|:-----|-----------:|-----------:|:------------:|:----------------:|
-| prompt.v1.prompty | Control | 50% | 206 | n/a | n/a |
-| prompt.v2.prompty | Treatment | 50% | 218 | ![SRM check: Pass](https://img.shields.io/badge/SRM%20check-Pass-157e3b "No sample ratio mismatch detected.") | ![Change: Detected](https://img.shields.io/badge/Change-Detected-1c72af "Observed metric movements are inconsistent with statistical noise.") |
+| prompt.v1.prompty | Control | 50% | 681 | n/a | n/a |
+| prompt.v2.prompty | Treatment | 50% | 700 | ![SRM check: Pass](https://img.shields.io/badge/SRM%20check-Pass-157e3b "No sample ratio mismatch detected.") | ![Change: Detected](https://img.shields.io/badge/Change-Detected-1c72af "Observed metric movements are inconsistent with statistical noise.") |
 
 
 ### Metric results
@@ -26,8 +26,8 @@
 
 | Metric                     |   prompt.v1.prompty 💊 | prompt.v2.prompty 💊                                                                                                                                                                                       |
 |:---------------------------|-----------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Average GenAI usage tokens |                  216.5 | ![Improved: -25.5%](https://img.shields.io/badge/Improved---25.5%25-157e3b "Metric value = 161.4.&#013;Highly statistically significant (p-value: 9e-4).")                                                 |
-| Number of GenAI users      |                    205 | ![Inconclusive: +0.5%](https://img.shields.io/badge/Inconclusive-%2B0.5%25-e6e6e3 "Metric value = 218 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.318).") |
+| Average GenAI usage tokens |                  211.6 | ![Improved: -22.0%](https://img.shields.io/badge/Improved---22.0%25-157e3b "Metric value = 165.1.&#013;Highly statistically significant (p-value: 3e-7).")                                                 |
+| Number of GenAI users      |                    679 | ![Inconclusive: +0.3%](https://img.shields.io/badge/Inconclusive-%2B0.3%25-e6e6e3 "Metric value = 700 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.157).") |
 
 > <details>
 > <summary><strong>Metric details</strong></summary>
@@ -46,10 +46,10 @@
 
 | Metric                     |   prompt.v1.prompty 💊 | prompt.v2.prompty 💊                                                                                                                                                                                       |
 |:---------------------------|-----------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Number of GenAI chat calls |                    205 | ![Inconclusive: +0.5%](https://img.shields.io/badge/Inconclusive-%2B0.5%25-e6e6e3 "Metric value = 218 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.318).") |
-| Number of GenAI chat users |                    205 | ![Inconclusive: +0.5%](https://img.shields.io/badge/Inconclusive-%2B0.5%25-e6e6e3 "Metric value = 218 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.318).") |
-| Number of GenAI spans      |                    205 | ![Inconclusive: +0.5%](https://img.shields.io/badge/Inconclusive-%2B0.5%25-e6e6e3 "Metric value = 218 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.318).") |
-| Number of GenAI users      |                    205 | ![Inconclusive: +0.5%](https://img.shields.io/badge/Inconclusive-%2B0.5%25-e6e6e3 "Metric value = 218 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.318).") |
+| Number of GenAI chat calls |                    679 | ![Inconclusive: +0.3%](https://img.shields.io/badge/Inconclusive-%2B0.3%25-e6e6e3 "Metric value = 700 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.157).") |
+| Number of GenAI chat users |                    679 | ![Inconclusive: +0.3%](https://img.shields.io/badge/Inconclusive-%2B0.3%25-e6e6e3 "Metric value = 700 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.157).") |
+| Number of GenAI spans      |                    679 | ![Inconclusive: +3.3%](https://img.shields.io/badge/Inconclusive-%2B3.3%25-e6e6e3 "Metric value = 721 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.059).") |
+| Number of GenAI users      |                    679 | ![Inconclusive: +0.3%](https://img.shields.io/badge/Inconclusive-%2B0.3%25-e6e6e3 "Metric value = 700 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.157).") |
 
 > <details>
 > <summary><strong>Metric details</strong></summary>
@@ -68,13 +68,13 @@
 <details>
 <summary><strong>Cost</strong> (5 of 5 conclusive)</summary>
 
-| Metric                            |   prompt.v1.prompty 💊 | prompt.v2.prompty 💊                                                                                                                                                                                     |
-|:----------------------------------|-----------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Average GenAI usage input tokens  |                  22.84 | ![Degraded: +130.4%](https://img.shields.io/badge/Degraded-%2B130.4%25-d03536 "Metric value = 52.63.&#013;Highly statistically significant (p-value: ≈0).")                                              |
-| Average GenAI usage output tokens |                  193.7 | ![Improved: -43.8%](https://img.shields.io/badge/Improved---43.8%25-157e3b "Metric value = 108.8.&#013;Highly statistically significant (p-value: 4e-7).")                                               |
-| Average GenAI usage tokens        |                  216.5 | ![Improved: -25.5%](https://img.shields.io/badge/Improved---25.5%25-157e3b "Metric value = 161.4.&#013;Highly statistically significant (p-value: 9e-4).")                                               |
-| Total GenAI chat usage tokens     |                 44,384 | ![Improved: -25.4%](https://img.shields.io/badge/Improved---25.4%25-157e3b "Metric value = 35,021 (comparison accounts for unequal allocation).&#013;Highly statistically significant (p-value: 9e-4).") |
-| Total GenAI usage tokens          |                 44,384 | ![Improved: -25.4%](https://img.shields.io/badge/Improved---25.4%25-157e3b "Metric value = 35,021 (comparison accounts for unequal allocation).&#013;Highly statistically significant (p-value: 9e-4).") |
+| Metric                            |   prompt.v1.prompty 💊 | prompt.v2.prompty 💊                                                                                                                                                                                      |
+|:----------------------------------|-----------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Average GenAI usage input tokens  |                  22.71 | ![Degraded: +132.2%](https://img.shields.io/badge/Degraded-%2B132.2%25-d03536 "Metric value = 52.74.&#013;Highly statistically significant (p-value: ≈0).")                                               |
+| Average GenAI usage output tokens |                  188.9 | ![Improved: -40.5%](https://img.shields.io/badge/Improved---40.5%25-157e3b "Metric value = 112.4.&#013;Highly statistically significant (p-value: 1e-16).")                                               |
+| Average GenAI usage tokens        |                  211.6 | ![Improved: -22.0%](https://img.shields.io/badge/Improved---22.0%25-157e3b "Metric value = 165.1.&#013;Highly statistically significant (p-value: 3e-7).")                                                |
+| Total GenAI chat usage tokens     |                142,817 | ![Improved: -21.6%](https://img.shields.io/badge/Improved---21.6%25-157e3b "Metric value = 115,092 (comparison accounts for unequal allocation).&#013;Highly statistically significant (p-value: 6e-7).") |
+| Total GenAI usage tokens          |                142,817 | ![Improved: -21.6%](https://img.shields.io/badge/Improved---21.6%25-157e3b "Metric value = 115,092 (comparison accounts for unequal allocation).&#013;Highly statistically significant (p-value: 6e-7).") |
 
 > <details>
 > <summary><strong>Metric details</strong></summary>
@@ -115,22 +115,22 @@
 | Metric                                          |   prompt.v1.prompty 💊 | prompt.v2.prompty 💊                                                                                                                                                                                       |
 |:------------------------------------------------|-----------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Average GenAI call duration [ms]                |                      0 | ![Zero samples: 0%](https://img.shields.io/badge/Zero%20samples-0%25-f0e543 "Metric value = 0.&#013;Zero observations might indicate a problem with the metric definition or data collection")             |
-| Average GenAI usage input tokens                |                  22.84 | ![Degraded: +130.4%](https://img.shields.io/badge/Degraded-%2B130.4%25-d03536 "Metric value = 52.63.&#013;Highly statistically significant (p-value: ≈0).")                                                |
-| Average GenAI usage output tokens               |                  193.7 | ![Improved: -43.8%](https://img.shields.io/badge/Improved---43.8%25-157e3b "Metric value = 108.8.&#013;Highly statistically significant (p-value: 4e-7).")                                                 |
-| Average GenAI usage tokens                      |                  216.5 | ![Improved: -25.5%](https://img.shields.io/badge/Improved---25.5%25-157e3b "Metric value = 161.4.&#013;Highly statistically significant (p-value: 9e-4).")                                                 |
+| Average GenAI usage input tokens                |                  22.71 | ![Degraded: +132.2%](https://img.shields.io/badge/Degraded-%2B132.2%25-d03536 "Metric value = 52.74.&#013;Highly statistically significant (p-value: ≈0).")                                                |
+| Average GenAI usage output tokens               |                  188.9 | ![Improved: -40.5%](https://img.shields.io/badge/Improved---40.5%25-157e3b "Metric value = 112.4.&#013;Highly statistically significant (p-value: 1e-16).")                                                |
+| Average GenAI usage tokens                      |                  211.6 | ![Improved: -22.0%](https://img.shields.io/badge/Improved---22.0%25-157e3b "Metric value = 165.1.&#013;Highly statistically significant (p-value: 3e-7).")                                                 |
 | Coherence score                                 |                      0 | ![Zero samples: 0%](https://img.shields.io/badge/Zero%20samples-0%25-f0e543 "Metric value = 0.&#013;Zero observations might indicate a problem with the metric definition or data collection")             |
 | Fluency score                                   |                      0 | ![Zero samples: 0%](https://img.shields.io/badge/Zero%20samples-0%25-f0e543 "Metric value = 0.&#013;Zero observations might indicate a problem with the metric definition or data collection")             |
 | Hate unfairness score                           |                      0 | ![Zero samples: 0%](https://img.shields.io/badge/Zero%20samples-0%25-f0e543 "Metric value = 0.&#013;Zero observations might indicate a problem with the metric definition or data collection")             |
-| Number of GenAI chat calls                      |                    205 | ![Inconclusive: +0.5%](https://img.shields.io/badge/Inconclusive-%2B0.5%25-e6e6e3 "Metric value = 218 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.318).") |
-| Number of GenAI chat users                      |                    205 | ![Inconclusive: +0.5%](https://img.shields.io/badge/Inconclusive-%2B0.5%25-e6e6e3 "Metric value = 218 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.318).") |
-| Number of GenAI operations that end in an error |                      0 | ![Inconclusive: --](https://img.shields.io/badge/Inconclusive------e6e6e3 "Metric value = 1 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.318).")           |
-| Number of GenAI spans                           |                    205 | ![Inconclusive: +0.5%](https://img.shields.io/badge/Inconclusive-%2B0.5%25-e6e6e3 "Metric value = 218 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.318).") |
-| Number of GenAI users                           |                    205 | ![Inconclusive: +0.5%](https://img.shields.io/badge/Inconclusive-%2B0.5%25-e6e6e3 "Metric value = 218 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.318).") |
+| Number of GenAI chat calls                      |                    679 | ![Inconclusive: +0.3%](https://img.shields.io/badge/Inconclusive-%2B0.3%25-e6e6e3 "Metric value = 700 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.157).") |
+| Number of GenAI chat users                      |                    679 | ![Inconclusive: +0.3%](https://img.shields.io/badge/Inconclusive-%2B0.3%25-e6e6e3 "Metric value = 700 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.157).") |
+| Number of GenAI operations that end in an error |                      4 | ![Inconclusive: -27.0%](https://img.shields.io/badge/Inconclusive---27.0%25-e6e6e3 "Metric value = 3 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.679).")  |
+| Number of GenAI spans                           |                    679 | ![Inconclusive: +3.3%](https://img.shields.io/badge/Inconclusive-%2B3.3%25-e6e6e3 "Metric value = 721 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.059).") |
+| Number of GenAI users                           |                    679 | ![Inconclusive: +0.3%](https://img.shields.io/badge/Inconclusive-%2B0.3%25-e6e6e3 "Metric value = 700 (comparison accounts for unequal allocation).&#013;Not statistically significant (p-value: 0.157).") |
 | Protected material score                        |                      0 | ![Zero samples: 0%](https://img.shields.io/badge/Zero%20samples-0%25-f0e543 "Metric value = 0.&#013;Zero observations might indicate a problem with the metric definition or data collection")             |
 | Relevance score                                 |                      0 | ![Zero samples: 0%](https://img.shields.io/badge/Zero%20samples-0%25-f0e543 "Metric value = 0.&#013;Zero observations might indicate a problem with the metric definition or data collection")             |
 | Sexual content score                            |                      0 | ![Zero samples: 0%](https://img.shields.io/badge/Zero%20samples-0%25-f0e543 "Metric value = 0.&#013;Zero observations might indicate a problem with the metric definition or data collection")             |
-| Total GenAI chat usage tokens                   |                 44,384 | ![Improved: -25.4%](https://img.shields.io/badge/Improved---25.4%25-157e3b "Metric value = 35,021 (comparison accounts for unequal allocation).&#013;Highly statistically significant (p-value: 9e-4).")   |
-| Total GenAI usage tokens                        |                 44,384 | ![Improved: -25.4%](https://img.shields.io/badge/Improved---25.4%25-157e3b "Metric value = 35,021 (comparison accounts for unequal allocation).&#013;Highly statistically significant (p-value: 9e-4).")   |
+| Total GenAI chat usage tokens                   |                142,817 | ![Improved: -21.6%](https://img.shields.io/badge/Improved---21.6%25-157e3b "Metric value = 115,092 (comparison accounts for unequal allocation).&#013;Highly statistically significant (p-value: 6e-7).")  |
+| Total GenAI usage tokens                        |                142,817 | ![Improved: -21.6%](https://img.shields.io/badge/Improved---21.6%25-157e3b "Metric value = 115,092 (comparison accounts for unequal allocation).&#013;Highly statistically significant (p-value: 6e-7).")  |
 | Violent content score                           |                      0 | ![Zero samples: 0%](https://img.shields.io/badge/Zero%20samples-0%25-f0e543 "Metric value = 0.&#013;Zero observations might indicate a problem with the metric definition or data collection")             |
 
 > <details>
