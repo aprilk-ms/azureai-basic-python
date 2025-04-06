@@ -106,7 +106,7 @@
             });
 
             try {
-                /*
+                
                 const result = await client.getStreamedCompletion(messages);
 
                 let answer = "";
@@ -126,22 +126,24 @@
                     if (response.error) {
                         messageDiv.innerHTML = "Error: " + response.error;
                     }
-                }*/
+                }
 
-                const response = await client.getCompletion(messages, { "sessionState": { "sessionId": sessionId }});
-                const answer = response.answer;
+                
 
-                messageDiv.innerHTML = converter.makeHtml(answer);
-                messageDiv.scrollIntoView();
+                // const response = await client.getCompletion(messages, { "sessionState": { "sessionId": sessionId }});
+                // const answer = response.answer;
+
+                // messageDiv.innerHTML = converter.makeHtml(answer);
+                // messageDiv.scrollIntoView();
 
                 messages.push({
                     "role": "assistant",
                     "content": answer
                 });
 
-                if (response.variant) {
-                    messageTitleDiv.innerHTML += ` (Prompt Variant: ${response.variant})`;
-                }
+                // if (response.variant) {
+                //     messageTitleDiv.innerHTML += ` (Prompt Variant: ${response.variant})`;
+                // }
 
                 messageInput.value = "";
             } catch (error) {

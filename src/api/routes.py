@@ -92,7 +92,7 @@ async def chat_stream_handler(
     return fastapi.responses.StreamingResponse(response_stream())
 
 
-def get_targeting_context():
+def get_targeting_context() -> TargetingContext:
     return TargetingContext(user_id=get_baggage("Microsoft.TargetingId"))
 
 @router.post("/chat")

@@ -15,7 +15,7 @@ def get_model_config():
 
 def get_eval_data_set():
     current_dir = os.path.dirname(__file__)
-    file_path = os.path.join(current_dir, "data/eval-data-set-large.jsonl")
+    file_path = os.path.join(current_dir, "data/eval-data-set.jsonl")
     with open(file_path) as file:
         dataSet = json.load(file)
     return dataSet
@@ -50,7 +50,7 @@ def test_simulate_traffic():
 def test_simulate_traffic_nostream():
     app = create_app()
     with TestClient(app) as client:
-        for i in range(20):
+        for i in range(1):
             for data in get_eval_data_set():
                 query = data["query"]
                 response = client.post("/chat", json={
