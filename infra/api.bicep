@@ -4,11 +4,13 @@ param tags object = {}
 
 param identityName string
 param containerAppsEnvironmentName string
-param containerRegistryName string
-param serviceName string = 'api'
-param exists bool
 param projectConnectionString string
 param chatDeploymentName string
+param embeddingDeploymentName string
+param aiSearchIndexName string
+param embeddingDeploymentDimensions string
+param searchServiceEndpoint string
+param projectName string
 
 resource apiIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: identityName
@@ -29,23 +31,38 @@ var env = [
     value: chatDeploymentName
   }
   {
+    name: 'AZURE_AI_EMBED_DEPLOYMENT_NAME'
+    value: embeddingDeploymentName
+  }
+  {
+    name: 'AZURE_AI_SEARCH_INDEX_NAME'
+    value: aiSearchIndexName
+  }
+  {
+    name: 'AZURE_AI_EMBED_DIMENSIONS'
+    value: embeddingDeploymentDimensions
+  }
+  {
     name: 'RUNNING_IN_PRODUCTION'
     value: 'true'
+  }
+  {
+    name: 'AZURE_AI_SEARCH_ENDPOINT'
+    value: searchServiceEndpoint
   }
 ]
 
 module app 'core/host/container-app-upsert.bicep' = {
-  name: '${serviceName}-container-app-module'
+  name: 'container-app-module'
   params: {
     name: name
     location: location
-    tags: union(tags, { 'azd-service-name': serviceName })
+    tags: tags
     identityName: apiIdentity.name
-    exists: exists
     containerAppsEnvironmentName: containerAppsEnvironmentName
-    containerRegistryName: containerRegistryName
     targetPort: 50505
     env: env
+    projectName: projectName
   }
 }
 

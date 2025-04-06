@@ -1,16 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: azd-aistudio-starter
+name: azd-get-started-with-ai-chat
 metadata:
-  template: azd-aistudio-starter@0.0.1-beta
-
-services:
-  api:
-    project: ./src
-    language: py
-    host: containerapp
-    docker:
-      remoteBuild: true
+  template: azd-get-started-with-ai-chat@0.0.1-beta
 
 hooks:
   postprovision:
