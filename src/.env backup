@@ -1,0 +1,5 @@
+AZURE_AIPROJECT_CONNECTION_STRING=eastus2.api.azureml.ms;80d2c6c6-fa64-4ab1-8aa5-4e118c6b16ce;rg-aprilk-azure-ai-basic-01a;ai-project-e6pnryr2q3qeg
+AZURE_AI_CHAT_DEPLOYMENT_NAME=gpt-4o-mini
+AZURE_TENANT_ID=72f988bf-86f1-41af-91ab-2d7cd011db47
+APP_CONFIGURATION_ENDPOINT="https://appcs-e6pnryr2q3qeg.azconfig.io"
+AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED=true

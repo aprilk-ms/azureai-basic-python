@@ -123,10 +123,13 @@ param useApplicationInsights bool = true
 @description('Use the RAG search')
 param useSearchService bool = false
 
+@description('Id of the user or app to assign application roles')
+param principalId string = ''
+
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location, seed))
 var projectName = !empty(aiProjectName) ? aiProjectName : 'ai-project-${resourceToken}'
-var tags = { 'azd-env-name': environmentName }
+var tags = { 'azd-env-name': environmentName, 'OwningExPTrack': '3p' }
 
 var aiChatModel = [
   {
@@ -415,69 +418,56 @@ module configStore 'core/config/configstore.bicep' = {
   }
 }
 
-module experimentWorkspace 'core/config/experimentworkspace.bicep' = {
-  name: 'expWorkspace'
+// TODO: this will go away with auto-provisioning
+module onlineExperimentWorkspace 'core/config/onlineexperimentworkspace.bicep' = {
+  name: 'online-experiment-workspace'
   scope: rg
   params: {
-    name: 'exp${substring(resourceToken, 0, 10)}'
+    name: 'online-exp-${substring(resourceToken, 0, 10)}'
     location: 'eastus2'
     tags: tags
-    userPrincipalId: principalId
-    createRoleForUser: true
-    pipelineServicePrincipalId: principalId
+    principalId: principalId
     logAnalyticsWorkspaceName: ai.outputs.logAnalyticsWorkspaceName
     storageAccountName: ai.outputs.storageAccountName
-    identityName: '${abbrs.managedIdentityUserAssignedIdentities}exp-${resourceToken}'
+    appConfigName: configStore.outputs.name
   }
 }
 
-// Allow experiment workspace read access to storage
+// TODO: this will go away with auto-provisioning
+// Allow online experiment workspace read access to storage
 module logAnalyticsExpAccess 'core/security/role.bicep' = {
   scope: rg
   name: 'storage-account-exp-role'
   params: {
-    principalId: experimentWorkspace.outputs.expWorkspaceIdentityPrincipalId
+    principalId: onlineExperimentWorkspace.outputs.workspaceIdentityPrincipalId
     roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1' // Storage Blob Data Reader
     principalType: 'ServicePrincipal'
   }
 }
 
-// Allow experiment workspace read access to log analytics workspace
+// TODO: this will go away with auto-provisioning
+// Allow online experiment workspace read access to log analytics workspace
 module storageAccountExpAccess 'core/security/role.bicep' = {
   scope: rg
   name: 'log-analytics-exp-role'
   params: {
-    principalId: experimentWorkspace.outputs.expWorkspaceIdentityPrincipalId
+    principalId: onlineExperimentWorkspace.outputs.workspaceIdentityPrincipalId
     roleDefinitionId: '73c42c96-874c-492b-b04d-ab87d138a893' // Log Analytics Reader
     principalType: 'ServicePrincipal'
   }
 }
 
-// Allow pipeline access to Log Analytics workspace
-// module logAnalyticsRole 'core/security/role.bicep' = if (!createRoleForUser) {
-//   scope: resourceGroup
-//   name: 'log-analytics-role-pipeline'
-//   params: {
-//     principalId: principalId
-//     roleDefinitionId: '92aaf0da-9dab-42b6-94a3-d43ce8d16293' // Log Analytics Contributor
-//     principalType: 'ServicePrincipal'
-//   }
-// }
-
-module dataExportRule 'core/monitor/dataexports.bicep' = {
-  name: 'loganalytics-dataexportrule'
-  scope: rg
-  params: {
-    name: 'dataexportrule'
-    logAnalyticsWorkspaceName: ai.outputs.logAnalyticsWorkspaceName
-    storageAccountName: ai.outputs.storageAccountName
-    tables: [
-      'AppEvents'
-      'AppEvents_CL'
-    ]
-  }
+// Allow access to Log Analytics workspace
+module logAnalyticsRole 'core/security/role.bicep' = {
+   scope: rg
+   name: 'log-analytics-role'
+   params: {
+     principalId: principalId
+     roleDefinitionId: '92aaf0da-9dab-42b6-94a3-d43ce8d16293' // Log Analytics Contributor
+   }
 }
 
+// TODO: this will partially go away with auto-provisioning (only keep the GenAI metric summary rule)
 // Provision summary rules aggregating data for experiment workspace
 var ruleDefinitions = loadYamlContent('./la-summary-rules.yaml')
 module summaryRules 'core/monitor/summaryrule.bicep' =  [ for (rule, i) in ruleDefinitions.summaryRules:  {
@@ -493,6 +483,26 @@ module summaryRules 'core/monitor/summaryrule.bicep' =  [ for (rule, i) in ruleD
     destinationTable: rule.destinationTable
   }
 } ]
+
+// TODO: this will partially go away with auto-provisioning (only keep the custom event table)
+module dataExportRule 'core/monitor/dataexports.bicep' = {
+  name: 'loganalytics-dataexportrule'
+  scope: rg
+  params: {
+    name: 'dataexportrule'
+    logAnalyticsWorkspaceName: ai.outputs.logAnalyticsWorkspaceName
+    storageAccountName: ai.outputs.storageAccountName
+    tables: [
+      'AppEvents'
+      'AppEvents_CL'
+    ]
+  }
+  dependsOn:[
+    summaryRules
+  ]
+}
+
+
 
 output AZURE_RESOURCE_GROUP string = rg.name
 
@@ -516,6 +526,6 @@ output SERVICE_API_IMAGE_NAME string = api.outputs.SERVICE_API_IMAGE_NAME
 output SERVICE_API_ENDPOINTS array = ['${api.outputs.SERVICE_API_URI}']
 
 output APP_CONFIGURATION_ENDPOINT string = configStore.outputs.endpoint
-output EXPERIMENT_WORKSPACE_ID string = experimentWorkspace.outputs.expWorkspaceId
+output ONLINE_EXPERIMENT_ENDPOINT string = onlineExperimentWorkspace.outputs.workspaceEndpoint
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = ai.outputs.applicationInsightsConnectionString
 

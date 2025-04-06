@@ -14,36 +14,21 @@ from azure.identity import AzureDeveloperCliCredential, ManagedIdentityCredentia
 from dotenv import load_dotenv
 from fastapi.staticfiles import StaticFiles
 
-from .shared import globals
 from .routes import get_targeting_context
-
-from azure.ai.inference.tracing import AIInferenceInstrumentor 
-from azure.monitor.opentelemetry import configure_azure_monitor
 
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration.provider import load
-from featuremanagement import FeatureManager
-from featuremanagement.azuremonitor import publish_telemetry
 
 from featuremanagement import FeatureManager
 from featuremanagement.azuremonitor import TargetingSpanProcessor,publish_telemetry
 
-
-from opentelemetry.baggage import get_baggage
-from opentelemetry.sdk.trace import Span, SpanProcessor
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.baggage import set_baggage
-from opentelemetry.context import attach
-from opentelemetry.sdk.trace import Span
 
-from azure.core.settings import settings 
-
-import uuid
+from .search_index_manager import SearchIndexManager
+from .util import get_logger
 
 logger = None
 enable_trace = False
-logger = logging.getLogger("azureaiapp")
-logger.setLevel(logging.INFO)
 
 @contextlib.asynccontextmanager
 async def lifespan(app: fastapi.FastAPI):
@@ -65,18 +50,6 @@ async def lifespan(app: fastapi.FastAPI):
         credential=azure_credential,
         conn_str=os.environ["AZURE_AIPROJECT_CONNECTION_STRING"],
     )
-    # default_connection = await project.connections.get_default(connection_type=ConnectionType.AZURE_OPEN_AI)
-    # deployment_name = os.environ["AZURE_AI_CHAT_DEPLOYMENT_NAME"]
-    # api_version = "2024-08-01-preview"
-    # model_config = default_connection.to_evaluator_model_config(
-    #     deployment_name=deployment_name, api_version=api_version
-    # )
-    model_config = {
-        "type": "azure_openai",
-        "azure_deployment": "gpt-4o-mini",
-        "api_version": "2024-08-01-preview",
-        "azure_endpoint": "https://aoai-e6pnryr2q3qeg.openai.azure.com/"
-    }
 
     if enable_trace:
         application_insights_connection_string = ""
@@ -91,7 +64,18 @@ async def lifespan(app: fastapi.FastAPI):
             exit()
         else:
             from azure.monitor.opentelemetry import configure_azure_monitor
-            configure_azure_monitor(connection_string=application_insights_connection_string)
+            configure_azure_monitor(connection_string=application_insights_connection_string, span_processors=[TargetingSpanProcessor(targeting_context_accessor=get_targeting_context)])
+
+            # Inititalize the feature manager
+            app_config_conn_str = os.getenv("APP_CONFIGURATION_ENDPOINT") # this will become: project.experiments.get_connection_string()
+            app_config = load(
+                endpoint=app_config_conn_str,
+                credential=DefaultAzureCredential(),
+                feature_flag_enabled=True,
+                feature_flag_refresh_enabled=True,
+                refresh_interval=30,  # 30 seconds
+            )
+            feature_manager = FeatureManager(app_config, targeting_context_accessor=get_targeting_context, on_feature_evaluated=publish_telemetry)
 
     chat = await project.inference.get_chat_completions_client()
     embed = await project.inference.get_embeddings_client()
@@ -121,37 +105,8 @@ async def lifespan(app: fastapi.FastAPI):
     app.state.chat = chat
     app.state.search_index_manager = search_index_manager
     app.state.chat_model = os.environ["AZURE_AI_CHAT_DEPLOYMENT_NAME"]
-    prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / "prompt.v1.prompty")
-
-
-    # Enable tracing
-    application_insights_connection_string = await project.telemetry.get_connection_string()
-    configure_azure_monitor(connection_string=application_insights_connection_string, span_processors=[TargetingSpanProcessor(targeting_context_accessor=get_targeting_context)])
-    settings.tracing_implementation = "opentelemetry" 
-    AIInferenceInstrumentor().instrument() 
-
-    # Inititalize the feature manager
-    app_config_conn_str = os.getenv("APP_CONFIGURATION_ENDPOINT") # this will become: project.experiments.get_connection_string()
-    app_config = load(
-        endpoint=app_config_conn_str,
-        credential=DefaultAzureCredential(),
-        feature_flag_enabled=True,
-        feature_flag_refresh_enabled=True,
-        refresh_interval=30,  # 30 seconds
-    )
-    feature_manager = FeatureManager(app_config, targeting_context_accessor=get_targeting_context, on_feature_evaluated=publish_telemetry)
-    #feature_manager = FeatureManager(app_config, on_feature_evaluated=publish_telemetry)
-
-
-
+    app.state.feature_manager = feature_manager
    
-    globals["project"] = project
-    globals["chat"] = chat
-    globals["prompt"] = prompt
-    globals["chat_model"] = os.environ["AZURE_AI_CHAT_DEPLOYMENT_NAME"]
-    globals["feature_manager"] = feature_manager
-    globals["model_config"] = model_config
-
     yield
 
     await project.close()

@@ -35,7 +35,7 @@ from azure.ai.evaluation import CoherenceEvaluator, FluencyEvaluator, RelevanceE
 import asyncio
 from opentelemetry.baggage import set_baggage, get_baggage
 from opentelemetry.context import attach
-from featuremanagement import TargetingContext
+from featuremanagement import TargetingContext, FeatureManager
 from azure.identity import DefaultAzureCredential
 
 router = fastapi.APIRouter()
@@ -46,13 +46,15 @@ templates = Jinja2Templates(directory="api/templates")
 def get_chat_client(request: Request) -> ChatCompletionsClient:
     return request.app.state.chat
 
-
 def get_chat_model(request: Request) -> str:
     return request.app.state.chat_model
 
-
 def get_search_index_namager(request: Request) -> SearchIndexManager:
     return request.app.state.search_index_manager
+
+def get_feature_manager(request: Request) -> str:
+    return request.app.state.feature_manager
+
 class Message(pydantic.BaseModel):
     content: str
     role: str = "user"
@@ -73,10 +75,11 @@ async def index_name(request: Request):
 
 @router.post("/chat/stream")
 async def chat_stream_handler(
-    chat_request: ChatRequest
+    chat_request: ChatRequest,
     chat_client: ChatCompletionsClient = Depends(get_chat_client),
     model_deployment_name: str = Depends(get_chat_model),
-    search_index_manager: SearchIndexManager = Depends(get_search_index_namager)
+    search_index_manager: SearchIndexManager = Depends(get_search_index_namager),
+    feature_manager: FeatureManager = Depends
 ) -> fastapi.responses.StreamingResponse:
     if chat_client is None:
         raise Exception("Chat client not initialized")
@@ -85,18 +88,20 @@ async def chat_stream_handler(
         messages = [{"role": message.role, "content": message.content} for message in chat_request.messages]
         model_deployment_name = globals["chat_model"]
         feature_manager = globals["feature_manager"] 
-        targeting_id = get_baggage("Microsoft.TargetingId") or str(uuid.uuid4())
         
-        # figure out which prompty template to use (replace file to API)
+        targeting_id = chat_request.sessionState.get('sessionId', str(uuid.uuid4()))
+        attach(set_baggage("Microsoft.TargetingId", targeting_id))
+        
+        # figure out which prompty template to use
+        prompt_template = "prompt.v1.prompty"
         if chat_request.prompt_override:
-            prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / chat_request.prompt_override)
-        else:                       
+            prompt_template = chat_request.prompt_override
+        elif feature_manager is not None:                       
             prompt_variant = feature_manager.get_variant("prompty_file") # replace this with prompt_asset
-            if prompt_variant and prompt_variant.configuration:
-                prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / prompt_variant.configuration)
-            else:
-                prompt = globals["prompt"]
-
+            if prompt_variant and prompt_variant.configuration: # TODO: check file exists
+                prompt_template = prompt_variant.configuration
+ 
+        prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / prompt_template)
         prompt_messages = prompt.create_messages()
 
         chat_coroutine = await chat_client.complete(
@@ -191,47 +196,47 @@ async def chat_stream_handler(
 def get_targeting_context() -> TargetingContext:
     return TargetingContext(user_id=get_baggage("Microsoft.TargetingId"))
 
-@router.post("/chat")
-async def chat_nostream_handler(
-    chat_request: ChatRequest,
-    request: Request
-):
-    chat_client = globals["chat"]
-    if chat_client is None:
-        raise Exception("Chat client not initialized")
+# @router.post("/chat")
+# async def chat_nostream_handler(
+#     chat_request: ChatRequest,
+#     request: Request
+# ):
+#     chat_client = globals["chat"]
+#     if chat_client is None:
+#         raise Exception("Chat client not initialized")
    
-    messages = [{"role": message.role, "content": message.content} for message in chat_request.messages]
-    model_deployment_name = globals["chat_model"]
-    feature_manager = globals["feature_manager"] 
+#     messages = [{"role": message.role, "content": message.content} for message in chat_request.messages]
+#     model_deployment_name = globals["chat_model"]
+#     feature_manager = globals["feature_manager"] 
 
-    targeting_id = chat_request.sessionState.get('sessionId', str(uuid.uuid4()))
-    attach(set_baggage("Microsoft.TargetingId", targeting_id))
+#     targeting_id = chat_request.sessionState.get('sessionId', str(uuid.uuid4()))
+#     attach(set_baggage("Microsoft.TargetingId", targeting_id))
     
-    # figure out which prompty template to use (replace file to API)
-    variant = "none"
-    if chat_request.prompt_override:
-        prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / chat_request.prompt_override)
-        variant = chat_request.prompt_override
-    else:                       
-        prompt_variant = feature_manager.get_variant("prompty_file") # replace this with prompt_asset
-        if prompt_variant and prompt_variant.configuration:
-            prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / prompt_variant.configuration)
-            variant = prompt_variant.name
-        else:
-            prompt = globals["prompt"]
+#     # figure out which prompty template to use (replace file to API)
+#     variant = "none"
+#     if chat_request.prompt_override:
+#         prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / chat_request.prompt_override)
+#         variant = chat_request.prompt_override
+#     else:                       
+#         prompt_variant = feature_manager.get_variant("prompty_file") # replace this with prompt_asset
+#         if prompt_variant and prompt_variant.configuration:
+#             prompt = PromptTemplate.from_prompty(pathlib.Path(__file__).parent.resolve() / prompt_variant.configuration)
+#             variant = prompt_variant.name
+#         else:
+#             prompt = globals["prompt"]
 
-    prompt_messages = prompt.create_messages()
+#     prompt_messages = prompt.create_messages()
 
-    try:
-        response = await chat_client.complete(
-            model=model_deployment_name, messages=prompt_messages + messages, stream=False
-        )
-        track_event("RequestMade", targeting_id)
-        answer = response.choices[0].message.content
-    except Exception as e:
-        error = {"Error": str(e)}
-        track_event("ErrorLLM", targeting_id, error)       
-        return { "answer": str(e), "variant": variant }    
+#     try:
+#         response = await chat_client.complete(
+#             model=model_deployment_name, messages=prompt_messages + messages, stream=False
+#         )
+#         track_event("RequestMade", targeting_id)
+#         answer = response.choices[0].message.content
+#     except Exception as e:
+#         error = {"Error": str(e)}
+#         track_event("ErrorLLM", targeting_id, error)       
+#         return { "answer": str(e), "variant": variant }    
 
 
     # conversation = {}
