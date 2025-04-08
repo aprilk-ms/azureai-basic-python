@@ -19,9 +19,6 @@ from .routes import get_targeting_context
 from azure.identity import DefaultAzureCredential
 from azure.appconfiguration.provider import load
 
-from featuremanagement import FeatureManager
-from featuremanagement.azuremonitor import TargetingSpanProcessor,publish_telemetry
-
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from .search_index_manager import SearchIndexManager
@@ -64,10 +61,14 @@ async def lifespan(app: fastapi.FastAPI):
             exit()
         else:
             from azure.monitor.opentelemetry import configure_azure_monitor
+            from featuremanagement import FeatureManager
+            from featuremanagement.azuremonitor import publish_telemetry, TargetingSpanProcessor
+
             configure_azure_monitor(connection_string=application_insights_connection_string, span_processors=[TargetingSpanProcessor(targeting_context_accessor=get_targeting_context)])
 
-            # Inititalize the feature manager
+            # Inititalize the feature manager / TODO: Add null check
             app_config_conn_str = os.getenv("APP_CONFIGURATION_ENDPOINT") # this will become: project.experiments.get_connection_string()
+
             app_config = load(
                 endpoint=app_config_conn_str,
                 credential=DefaultAzureCredential(),
@@ -76,6 +77,7 @@ async def lifespan(app: fastapi.FastAPI):
                 refresh_interval=30,  # 30 seconds
             )
             feature_manager = FeatureManager(app_config, targeting_context_accessor=get_targeting_context, on_feature_evaluated=publish_telemetry)
+            app.state.feature_manager = feature_manager
 
     chat = await project.inference.get_chat_completions_client()
     embed = await project.inference.get_embeddings_client()
@@ -105,13 +107,15 @@ async def lifespan(app: fastapi.FastAPI):
     app.state.chat = chat
     app.state.search_index_manager = search_index_manager
     app.state.chat_model = os.environ["AZURE_AI_CHAT_DEPLOYMENT_NAME"]
-    app.state.feature_manager = feature_manager
+    
    
     yield
 
     await project.close()
-
     await chat.close()
+
+    if search_index_manager is not None:
+        await search_index_manager.close()
 
 # Below will be replaced by a helper function from App Config SDK
 
@@ -171,6 +175,7 @@ def create_app():
 
     app.include_router(routes.router)
 
-    FastAPIInstrumentor.instrument_app(app) #, server_request_hook=server_request_hook)
+    # TODO: do we need this?
+    #FastAPIInstrumentor.instrument_app(app) #, server_request_hook=server_request_hook)
 
     return app

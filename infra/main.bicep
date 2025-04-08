@@ -69,7 +69,7 @@ param storageAccountName string = ''
 @description('The log analytics workspace name. If ommited will be generated')
 param logAnalyticsWorkspaceName string = ''
 @description('Random seed to be used during generation of new resources suffixes.')
-param seed string = newGuid()
+param seed string = '' //newGuid()
 
 // Chat completion model
 @description('Format of the chat model to deploy')
@@ -415,6 +415,15 @@ module configStore 'core/config/configstore.bicep' = {
     tags: tags
     principalId: api.outputs.SERVICE_API_IDENTITY_PRINCIPAL_ID
     appInsightsName: ai.outputs.applicationInsightsName
+  }
+}
+
+module configStoreDataOwnerAccess 'core/security/role.bicep' = {
+  scope: rg
+  name: 'config-store-data-owner-role'
+  params: {
+    principalId: principalId
+    roleDefinitionId: '5ae67dd6-50cb-40e7-96ff-dc2bfa4b606b' // App Configuration Data Owner
   }
 }
 

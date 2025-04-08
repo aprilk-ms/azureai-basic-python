@@ -21,7 +21,7 @@ from azure.ai.inference import ChatCompletionsClient
 from .util import get_logger, ChatRequest
 from .search_index_manager import SearchIndexManager
 from azure.core.exceptions import HttpResponseError
-
+import pydantic 
 
 logger = get_logger(
     name="azureaiapp_routes",
@@ -40,7 +40,6 @@ from azure.identity import DefaultAzureCredential
 
 router = fastapi.APIRouter()
 templates = Jinja2Templates(directory="api/templates")
-
 
 # Accessors to get app state
 def get_chat_client(request: Request) -> ChatCompletionsClient:
@@ -79,15 +78,13 @@ async def chat_stream_handler(
     chat_client: ChatCompletionsClient = Depends(get_chat_client),
     model_deployment_name: str = Depends(get_chat_model),
     search_index_manager: SearchIndexManager = Depends(get_search_index_namager),
-    feature_manager: FeatureManager = Depends
+    feature_manager: FeatureManager = Depends(get_feature_manager)
 ) -> fastapi.responses.StreamingResponse:
     if chat_client is None:
         raise Exception("Chat client not initialized")
 
     async def response_stream():
         messages = [{"role": message.role, "content": message.content} for message in chat_request.messages]
-        model_deployment_name = globals["chat_model"]
-        feature_manager = globals["feature_manager"] 
         
         targeting_id = chat_request.sessionState.get('sessionId', str(uuid.uuid4()))
         attach(set_baggage("Microsoft.TargetingId", targeting_id))
@@ -107,23 +104,7 @@ async def chat_stream_handler(
         chat_coroutine = await chat_client.complete(
             model=model_deployment_name, messages=prompt_messages + messages, stream=True
         )
-        async for event in chat_coroutine:
-            if event.choices:
-                first_choice = event.choices[0]
-                yield (
-                    json.dumps(
-                        {
-                            "delta": {
-                                "content": first_choice.delta.content,
-                                "role": first_choice.delta.role,
-                            }
-                        },
-                        ensure_ascii=False,
-                    )
-                    + "\n"
-                )
 
-        prompt_messages = PromptTemplate.from_string('You are a helpful assistant').create_messages()
         # Use RAG model, only if we were provided index and we have found a context there.
         if search_index_manager is not None:
             context = await search_index_manager.search(chat_request)
@@ -135,6 +116,7 @@ async def chat_stream_handler(
                 logger.info(f"{prompt_messages=}")
             else:
                 logger.info("Unable to find the relevant information in the index for the request.")
+                
         try:
             chat_coroutine = await chat_client.complete(
                 model=model_deployment_name, messages=prompt_messages + messages, stream=True
