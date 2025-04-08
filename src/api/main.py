@@ -17,7 +17,6 @@ from fastapi.staticfiles import StaticFiles
 from .routes import get_targeting_context
 
 from azure.identity import DefaultAzureCredential
-from azure.appconfiguration.provider import load
 
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
@@ -60,24 +59,29 @@ async def lifespan(app: fastapi.FastAPI):
             logger.error("Enable it via the 'Tracing' tab in your AI Foundry project page.")
             exit()
         else:
-            from azure.monitor.opentelemetry import configure_azure_monitor
-            from featuremanagement import FeatureManager
-            from featuremanagement.azuremonitor import publish_telemetry, TargetingSpanProcessor
-
-            configure_azure_monitor(connection_string=application_insights_connection_string, span_processors=[TargetingSpanProcessor(targeting_context_accessor=get_targeting_context)])
-
-            # Inititalize the feature manager / TODO: Add null check
-            app_config_conn_str = os.getenv("APP_CONFIGURATION_ENDPOINT") # this will become: project.experiments.get_connection_string()
-
-            app_config = load(
-                endpoint=app_config_conn_str,
-                credential=DefaultAzureCredential(),
-                feature_flag_enabled=True,
-                feature_flag_refresh_enabled=True,
-                refresh_interval=30,  # 30 seconds
-            )
-            feature_manager = FeatureManager(app_config, targeting_context_accessor=get_targeting_context, on_feature_evaluated=publish_telemetry)
-            app.state.feature_manager = feature_manager
+            from azure.monitor.opentelemetry import configure_azure_monitor            
+            app_config_conn_str = os.getenv("APP_CONFIGURATION_ENDPOINT")
+            if app_config_conn_str:
+                from azure.appconfiguration.provider import load
+                from featuremanagement import FeatureManager
+                from featuremanagement.azuremonitor import publish_telemetry, TargetingSpanProcessor
+                logger.info("Configured Application Insights with App Configuration feature flag support")
+                configure_azure_monitor(
+                    connection_string=application_insights_connection_string, 
+                    span_processors=[TargetingSpanProcessor(targeting_context_accessor=get_targeting_context)])
+                app_config = load(
+                    endpoint=app_config_conn_str,
+                    credential=DefaultAzureCredential(),
+                    feature_flag_enabled=True,
+                    feature_flag_refresh_enabled=True,
+                    refresh_interval=30,  # 30 seconds
+                )
+                feature_manager = FeatureManager(app_config, targeting_context_accessor=get_targeting_context, on_feature_evaluated=publish_telemetry)
+                app.state.app_config = app_config
+                app.state.feature_manager = feature_manager
+            else: 
+                logger.info("Configured Application Insights.")
+                configure_azure_monitor(connection_string=application_insights_connection_string)            
 
     chat = await project.inference.get_chat_completions_client()
     embed = await project.inference.get_embeddings_client()
@@ -106,8 +110,7 @@ async def lifespan(app: fastapi.FastAPI):
 
     app.state.chat = chat
     app.state.search_index_manager = search_index_manager
-    app.state.chat_model = os.environ["AZURE_AI_CHAT_DEPLOYMENT_NAME"]
-    
+    app.state.chat_model = os.environ["AZURE_AI_CHAT_DEPLOYMENT_NAME"]    
    
     yield
 
@@ -165,6 +168,8 @@ def create_app():
             exit()
     else:
         logger.info("Tracing is not enabled")
+
+    # TODO: enable_app_config and make sure libaries are installed
 
     app = fastapi.FastAPI(lifespan=lifespan)
 

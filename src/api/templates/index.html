@@ -146,43 +146,45 @@
 
             try {
                 
-                const result = await client.getStreamedCompletion(messages);
+                // Uncomment the following lines if you want to use the streaming version
+                
+                // const result = await client.getStreamedCompletion(messages, { "sessionState": { "sessionId": sessionId }});
 
-                let answer = "";
-                for await (const response of result) {
-                    if (!response.delta) {
-                        continue;
-                    }
-                    if (response.delta.content) {
-                        // Clear out the DIV if its the first answer chunk we've received
-                        if (answer == "") {
-                            messageDiv.innerHTML = "";
-                        }
-                        answer += response.delta.content;
-                        messageDiv.innerHTML = converter.makeHtml(answer);
-                        messageDiv.scrollIntoView();
-                    }
-                    if (response.error) {
-                        messageDiv.innerHTML = "Error: " + response.error;
-                    }
-                }
+                // let answer = "";
+                // for await (const response of result) {
+                //     if (!response.delta) {
+                //         continue;
+                //     }
+                //     if (response.delta.content) {
+                //         // Clear out the DIV if its the first answer chunk we've received
+                //         if (answer == "") {
+                //             messageDiv.innerHTML = "";
+                //         }
+                //         answer += response.delta.content;
+                //         messageDiv.innerHTML = converter.makeHtml(answer);
+                //         messageDiv.scrollIntoView();
+                //     }
+                //     if (response.error) {
+                //         messageDiv.innerHTML = "Error: " + response.error;
+                //     }
+                // }
 
                 
+                // Uncomment the following lines if you want to use the non-streaming version
+                const response = await client.getCompletion(messages, { "sessionState": { "sessionId": sessionId }});
+                const answer = response.answer;
 
-                // const response = await client.getCompletion(messages, { "sessionState": { "sessionId": sessionId }});
-                // const answer = response.answer;
-
-                // messageDiv.innerHTML = converter.makeHtml(answer);
-                // messageDiv.scrollIntoView();
+                messageDiv.innerHTML = converter.makeHtml(answer);
+                messageDiv.scrollIntoView();
 
                 messages.push({
                     "role": "assistant",
                     "content": answer
                 });
 
-                // if (response.variant) {
-                //     messageTitleDiv.innerHTML += ` (Prompt Variant: ${response.variant})`;
-                // }
+                if (response.variant) {
+                    messageTitleDiv.innerHTML += ` (Prompt Variant: ${response.variant})`;
+                }
 
                 messageInput.value = "";
             } catch (error) {
